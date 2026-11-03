@@ -1,0 +1,1839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+<title>Cyber Sleuth DigiNet - 341 Field Guide Network</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- FontAwesome 6 -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        eden: {
+          950: '#020617',
+          900: '#070f26',
+          850: '#0b1638',
+          800: '#0f204d',
+          700: '#1e3a8a',
+          cyan: '#00f2fe',
+          neon: '#4facfe',
+          border: '#1e293b'
+        }
+      },
+      fontFamily: {
+        tech: ['Courier New', 'Consolas', 'monospace']
+      }
+    }
+  }
+}
+</script>
+<style>
+/* Custom Cyberpunk Dark Blue Theme with Pixel 8 Safe Area Handling */
+body {
+  background-color: #030816;
+  color: #e2e8f0;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Cyber grid overlay */
+.cyber-grid {
+  background-image:
+    linear-gradient(rgba(0, 242, 254, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 242, 254, 0.05) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #070f26;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e3a8a;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #00f2fe;
+}
+
+/* HUD pulse animation */
+@keyframes hudPulse {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 0.3; }
+}
+.hud-pulse {
+  animation: hudPulse 2s infinite ease-in-out;
+}
+
+/* Field guide card hover & glow */
+.fieldguide-card {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.fieldguide-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px 2px rgba(0, 242, 254, 0.3);
+}
+</style>
+</head>
+<body class="h-[100dvh] w-screen flex flex-col font-sans select-none overflow-hidden text-slate-100 cyber-grid">
+
+<!-- TOP CYBERPUNK HEADER -->
+<header class="h-14 bg-eden-900/95 border-b border-eden-700/60 backdrop-blur px-3 sm:px-4 flex items-center justify-between z-30 shrink-0">
+  <div class="flex items-center gap-2 sm:gap-3">
+    <div class="w-8 h-8 rounded-lg bg-cyan-950 border border-eden-cyan flex items-center justify-center text-eden-cyan shadow-[0_0_12px_rgba(0,242,254,0.4)] shrink-0">
+      <i class="fa-solid fa-network-wired text-sm"></i>
+    </div>
+    <div class="min-w-0">
+      <h1 class="font-tech font-bold text-xs sm:text-base tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-eden-cyan via-white to-blue-400 truncate">
+        EDEN // DIGINET <span class="text-[10px] sm:text-xs text-eden-cyan font-normal">[PIXEL 8]</span>
+      </h1>
+      <div class="text-[9px] sm:text-[10px] text-slate-400 flex items-center gap-2 font-mono">
+        <span>341 ENTRIES</span>
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 hud-pulse"></span>
+        <span id="registered-count-text" class="text-emerald-400 font-semibold">0 TRACKED</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW & LAYOUT TABS -->
+  <div class="flex items-center gap-1 sm:gap-2">
+    <div class="bg-eden-950/80 p-0.5 rounded-lg border border-eden-700/50 flex text-[11px] sm:text-xs font-mono">
+      <button id="btn-hier" class="px-2 py-1 rounded-md text-eden-cyan bg-eden-800 border border-eden-cyan/40 shadow">
+        Tree
+      </button>
+      <button id="btn-force" class="px-2 py-1 rounded-md text-slate-400 hover:text-white transition hidden sm:inline-block">
+        Force
+      </button>
+      <button id="btn-lineage" class="px-2 py-1 rounded-md text-slate-400 hover:text-white transition hidden sm:inline-block">
+        Cluster
+      </button>
+      <button id="btn-num" class="px-2 py-1 rounded-md text-slate-400 hover:text-white transition flex items-center gap-1">
+        <i class="fa-solid fa-table-cells text-[10px]"></i> List
+      </button>
+    </div>
+
+    <!-- Action Buttons -->
+    <button id="btn-toggle-filters" title="Toggle Search & Filters" class="w-8 h-8 rounded-lg bg-eden-950 border border-eden-700/80 flex items-center justify-center text-slate-300 hover:text-eden-cyan hover:border-eden-cyan transition shrink-0">
+      <i class="fa-solid fa-sliders text-xs"></i>
+    </button>
+    <button id="btn-toggle-checklist" title="Digidex Checklist Drawer" class="px-2.5 sm:px-3 h-8 rounded-lg bg-cyan-950/70 border border-eden-cyan text-eden-cyan text-xs font-mono flex items-center gap-1.5 hover:bg-cyan-900/50 transition shadow-[0_0_10px_rgba(0,242,254,0.2)] shrink-0">
+      <i class="fa-solid fa-check-double text-xs"></i>
+      <span class="hidden md:inline">DIGIDEX</span>
+      <span id="checklist-pill" class="px-1 py-0.2 text-[9px] sm:text-[10px] bg-eden-cyan text-eden-950 font-bold rounded">0%</span>
+    </button>
+  </div>
+</header>
+
+<!-- MAIN VIEWPORT CONTAINER -->
+<div class="flex-1 relative overflow-hidden">
+
+  <!-- CANVAS CONTAINER -->
+  <div id="canvas-container" class="absolute inset-0 z-0">
+    <canvas id="net-canvas" class="w-full h-full block cursor-grab active:cursor-grabbing"></canvas>
+
+    <!-- Quick Preview Tooltip -->
+    <div id="node-quick-tooltip" class="hidden absolute pointer-events-none z-20 bg-eden-950/95 border border-eden-cyan rounded-lg px-2.5 py-1.5 shadow-[0_0_15px_rgba(0,242,254,0.35)] backdrop-blur text-xs font-mono -translate-x-1/2 -translate-y-[120%] transition-opacity duration-150">
+      <div class="flex items-center gap-1.5 mb-0.5">
+        <span id="tooltip-stage-dot" class="w-2 h-2 rounded-full"></span>
+        <span id="tooltip-id" class="text-eden-cyan font-bold text-[10px]">#000</span>
+        <span id="tooltip-stage" class="text-slate-400 text-[10px]">Stage</span>
+        <span id="tooltip-type-badge" class="text-[9px] px-1 py-0.2 rounded font-mono font-bold"></span>
+        <span id="tooltip-attr-badge" class="text-[9px] px-1 py-0.2 rounded font-mono uppercase"></span>
+      </div>
+      <div id="tooltip-name" class="font-tech font-bold text-white text-xs tracking-wide">Digimon</div>
+    </div>
+
+    <!-- Progress HUD Ring for Long Press -->
+    <div id="hold-progress" class="hidden absolute pointer-events-none -translate-x-1/2 -translate-y-1/2 z-20">
+      <svg class="w-14 h-14 -rotate-90 transform">
+        <circle cx="28" cy="28" r="24" stroke="rgba(0, 242, 254, 0.2)" stroke-width="4" fill="none" />
+        <circle id="hold-circle" cx="28" cy="28" r="24" stroke="#00f2fe" stroke-width="4" stroke-dasharray="150" stroke-dashoffset="150" fill="none" class="transition-all duration-75" />
+      </svg>
+    </div>
+  </div>
+
+  <!-- NUMERICAL FIELD GUIDE GRID VIEW -->
+  <div id="numerical-container" class="hidden absolute inset-0 z-10 bg-eden-950/95 overflow-y-auto p-3 sm:p-6 backdrop-blur">
+    <div class="max-w-7xl mx-auto pb-12">
+      <div class="flex flex-wrap items-center justify-between pb-3 mb-4 border-b border-sky-500/30 gap-2">
+        <div>
+          <h2 class="text-lg sm:text-xl font-bold font-tech text-white tracking-wider flex items-center gap-2">
+            <span class="text-sky-400">FIELD GUIDE</span> ARCHIVE
+          </h2>
+          <p class="text-[11px] sm:text-xs text-slate-400">Database #001 to #341 with authentic requirements and state sync.</p>
+        </div>
+        <div class="flex items-center gap-2 sm:gap-4 text-xs font-mono">
+          <div class="bg-eden-900 border border-sky-400/30 px-2.5 py-1 rounded-md flex items-center gap-1.5 text-[11px]">
+            <span class="text-slate-400">TRACKED:</span>
+            <span id="num-registered-badge" class="text-emerald-400 font-bold">0 / 341</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid Cards Container -->
+      <div id="fieldguide-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8 gap-2.5 sm:gap-3">
+        <!-- Populated via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- FLOATING FILTER & SEARCH PANEL -->
+  <div id="filter-drawer" class="hidden absolute top-2 left-2 right-2 sm:right-auto sm:w-80 bg-eden-900/98 border border-eden-cyan/40 rounded-xl shadow-2xl p-3.5 backdrop-blur z-20 flex flex-col gap-3 max-h-[85vh] overflow-y-auto">
+    <div class="flex items-center justify-between border-b border-eden-700/60 pb-2">
+      <span class="font-tech font-bold text-xs text-eden-cyan tracking-wider flex items-center gap-2">
+        <i class="fa-solid fa-filter"></i> SEARCH & FILTERS
+      </span>
+      <button id="btn-close-filter" class="text-slate-400 hover:text-white p-1 text-sm">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Search Input -->
+    <div class="relative">
+      <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-400"></i>
+      <input id="search-input" type="text" placeholder="Search by name, #ID..." class="w-full bg-eden-950 border border-eden-700/80 rounded-lg pl-8 pr-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-eden-cyan font-mono" />
+    </div>
+
+    <!-- Stage Filters -->
+    <div>
+      <div class="flex items-center justify-between text-[11px] font-semibold text-slate-300 mb-1.5">
+        <span>DIGIVOLUTION STAGE</span>
+        <button id="btn-stage-toggle-all" class="text-eden-cyan hover:underline text-[10px]">Toggle All</button>
+      </div>
+      <div id="stage-filter-container" class="grid grid-cols-2 sm:grid-cols-3 gap-1.5"></div>
+    </div>
+
+    <!-- Type Filters -->
+    <div>
+      <div class="flex items-center justify-between text-[11px] font-semibold text-slate-300 mb-1.5">
+        <span>TYPE</span>
+        <button id="btn-type-toggle-all" class="text-eden-cyan hover:underline text-[10px]">Toggle All</button>
+      </div>
+      <div id="type-filter-container" class="grid grid-cols-2 gap-1.5"></div>
+    </div>
+
+    <!-- Attribute Filters -->
+    <div>
+      <div class="flex items-center justify-between text-[11px] font-semibold text-slate-300 mb-1.5">
+        <span>ATTRIBUTE</span>
+        <button id="btn-attr-toggle-all" class="text-eden-cyan hover:underline text-[10px]">Toggle All</button>
+      </div>
+      <div id="attr-filter-container" class="grid grid-cols-3 gap-1.5"></div>
+    </div>
+
+    <!-- Reset & Status -->
+    <div class="pt-2 border-t border-eden-700/60 flex items-center justify-between text-[11px] font-mono">
+      <span id="visible-count-badge" class="text-slate-400">341/341 Visible</span>
+      <button id="btn-reset-filters" class="text-eden-cyan hover:underline">Reset</button>
+    </div>
+  </div>
+
+  <!-- FLOATING CANVAS CONTROLS -->
+  <div id="canvas-controls" class="absolute bottom-3 left-3 z-20 flex items-center gap-1.5 bg-eden-950/85 border border-eden-700/60 p-1.5 rounded-lg backdrop-blur shadow-lg">
+    <button id="btn-zoom-in" title="Zoom In" class="w-8 h-8 rounded bg-eden-900 hover:bg-eden-800 text-slate-200 border border-eden-700 flex items-center justify-center text-xs">
+      <i class="fa-solid fa-plus"></i>
+    </button>
+    <button id="btn-zoom-out" title="Zoom Out" class="w-8 h-8 rounded bg-eden-900 hover:bg-eden-800 text-slate-200 border border-eden-700 flex items-center justify-center text-xs">
+      <i class="fa-solid fa-minus"></i>
+    </button>
+    <button id="btn-reset-zoom" title="Center" class="px-2 h-8 rounded bg-eden-900 hover:bg-eden-800 text-slate-200 border border-eden-700 text-xs font-mono">
+      Center
+    </button>
+  </div>
+
+  <!-- SELECTED DIGIMON INSPECTION MODAL -->
+  <div id="detail-card" class="hidden absolute inset-x-2 bottom-2 top-2 sm:inset-auto sm:top-4 sm:right-4 sm:w-96 bg-eden-950/98 border-2 border-eden-cyan rounded-xl shadow-2xl p-4 backdrop-blur z-30 flex flex-col max-h-[92vh]">
+    <div class="flex items-start justify-between border-b border-eden-700/70 pb-3 shrink-0">
+      <div class="flex items-center gap-3">
+        <div id="detail-stage-badge" class="w-9 h-9 rounded-lg flex items-center justify-center font-bold text-white text-base shadow">
+          R
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span id="detail-id" class="font-mono text-xs font-bold text-eden-cyan">#001</span>
+            <span id="detail-stage-text" class="text-[11px] font-mono px-1.5 py-0.2 rounded bg-eden-800 text-slate-300">Rookie</span>
+          </div>
+          <h2 id="detail-name" class="font-tech font-bold text-lg text-white">Agumon</h2>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <label class="flex items-center gap-1.5 bg-eden-900 border border-slate-700 hover:border-white px-2.5 py-1.5 rounded cursor-pointer transition">
+          <input id="detail-track-checkbox" type="checkbox" class="accent-emerald-400 w-4 h-4 rounded cursor-pointer">
+          <span class="text-[10px] font-mono uppercase text-slate-300 font-semibold">Track</span>
+        </label>
+        <button id="btn-close-detail" class="text-slate-400 hover:text-white p-1.5 text-base">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-4 gap-1.5 my-2.5 text-center font-mono shrink-0">
+      <div class="bg-eden-900/80 p-1.5 rounded border border-eden-700/50">
+        <span class="text-[9px] text-slate-400 block">MEMORY</span>
+        <span id="detail-memory" class="text-xs font-bold text-eden-cyan">5 MEM</span>
+      </div>
+      <div class="bg-eden-900/80 p-1.5 rounded border border-eden-700/50">
+        <span class="text-[9px] text-slate-400 block">SLOTS</span>
+        <span id="detail-slots" class="text-xs font-bold text-slate-200">1 SLT</span>
+      </div>
+      <div class="bg-eden-900/80 p-1.5 rounded border border-eden-700/50">
+        <span class="text-[9px] text-slate-400 block">ATTRIBUTE</span>
+        <span id="detail-attr" class="text-xs font-bold text-amber-400">Fire</span>
+      </div>
+      <div class="bg-eden-900/80 p-1.5 rounded border border-eden-700/50">
+        <span class="text-[9px] text-slate-400 block">TYPE</span>
+        <span id="detail-type" class="text-xs font-bold text-purple-400">Vaccine</span>
+      </div>
+    </div>
+
+    <!-- Evolution Criteria -->
+    <div class="bg-eden-900/60 border border-eden-700/60 rounded-lg p-2.5 mb-2.5 shrink-0 max-h-32 overflow-y-auto">
+      <span class="text-[10px] font-bold font-mono text-eden-cyan block mb-1 sticky top-0 bg-eden-900/90 py-0.5">
+        <i class="fa-solid fa-graduation-cap"></i> EVOLUTION CRITERIA
+      </span>
+      <div id="detail-requirements" class="text-[11px] text-slate-300 font-mono leading-relaxed">
+        Loading criteria...
+      </div>
+    </div>
+
+    <!-- Field Guide Data -->
+    <div class="mb-2.5 shrink-0">
+      <span class="text-[10px] font-bold font-mono text-slate-400 block mb-1">
+        <i class="fa-solid fa-book-open"></i> FIELD GUIDE DATA
+      </span>
+      <p id="detail-desc" class="text-[11px] text-slate-300 leading-relaxed font-sans bg-eden-950/60 p-2 rounded border border-eden-700/40 max-h-16 overflow-y-auto">
+        Loading data...
+      </p>
+    </div>
+
+    <!-- Interactive Evolution Links (Green) -->
+    <div class="mb-2.5 flex-1 min-h-[100px] flex flex-col overflow-hidden">
+      <span class="text-[10px] font-bold font-mono text-emerald-400 block mb-1 flex items-center justify-between shrink-0">
+        <span><i class="fa-solid fa-arrow-up-right-from-square"></i> DIGIVOLUTIONS (NEXT)</span>
+        <span id="detail-evo-count" class="text-[9px] text-slate-400 font-normal">0 forms</span>
+      </span>
+      <div id="detail-evo-list" class="flex flex-col gap-1.5 overflow-y-auto pr-1 flex-1"></div>
+    </div>
+
+    <!-- Interactive Devolution Links (Red) -->
+    <div class="flex-1 min-h-[90px] flex flex-col overflow-hidden">
+      <span class="text-[10px] font-bold font-mono text-rose-400 block mb-1 flex items-center justify-between shrink-0">
+        <span><i class="fa-solid fa-arrow-down-left-and-up-right-to-center"></i> DEVOLUTIONS (PRIOR)</span>
+        <span id="detail-devo-count" class="text-[9px] text-slate-400 font-normal">0 forms</span>
+      </span>
+      <div id="detail-devo-list" class="flex flex-col gap-1.5 overflow-y-auto pr-1 flex-1"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT SLIDE-OUT DIGIDEX CHECKLIST DRAWER -->
+  <div id="checklist-drawer" class="absolute top-0 right-0 bottom-0 w-84 max-w-[90vw] bg-eden-950/98 border-l border-eden-cyan/40 shadow-2xl backdrop-blur z-30 translate-x-full transition-transform duration-300 flex flex-col">
+    <div class="p-3.5 border-b border-eden-700/60 flex items-center justify-between bg-eden-900/50">
+      <div>
+        <h2 class="font-tech font-bold text-sm text-eden-cyan tracking-wider flex items-center gap-2">
+          <i class="fa-solid fa-list-check"></i> DIGIDEX TRACKER
+        </h2>
+        <span id="drawer-progress-text" class="text-[10px] font-mono text-slate-400">0 of 341 Registered (0%)</span>
+      </div>
+      <button id="btn-close-checklist" class="text-slate-400 hover:text-white p-1 text-base">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="p-2 border-b border-eden-700/40 bg-eden-900/30 flex items-center justify-between gap-2">
+      <button id="btn-check-all" class="flex-1 py-1.5 px-2 bg-eden-900 hover:bg-eden-800 text-eden-cyan border border-eden-700/60 rounded text-[11px] font-mono transition">
+        Check All
+      </button>
+      <button id="btn-uncheck-all" class="flex-1 py-1.5 px-2 bg-eden-900 hover:bg-eden-800 text-rose-400 border border-eden-700/60 rounded text-[11px] font-mono transition">
+        Clear All
+      </button>
+    </div>
+
+    <div id="checklist-items" class="flex-1 overflow-y-auto p-2.5 flex flex-col gap-1.5"></div>
+  </div>
+
+</div>
+
+<!-- APPLICATION SCRIPT WITH AUTHENTIC EVOLUTION REQUIREMENTS -->
+<script>
+const STAGE_ORDER = {
+  "Baby": 0, "In-Training": 1, "Rookie": 2, "Champion": 3,
+  "Ultimate": 4, "Mega": 5, "Ultra": 6, "Armor": 7
+};
+
+const STAGE_LABELS = {
+  "Baby": "Baby (Baby I)", "In-Training": "In-Training (Baby II)",
+  "Rookie": "Rookie (Child)", "Champion": "Champion (Adult)",
+  "Ultimate": "Ultimate (Perfect)", "Mega": "Mega (Ultimate)",
+  "Ultra": "Ultra (Super Ultimate)", "Armor": "Armor"
+};
+
+const STAGE_COLORS = {
+  "Baby": "#06b6d4", "In-Training": "#14b8a6", "Rookie": "#3b82f6",
+  "Champion": "#f59e0b", "Ultimate": "#f97316", "Mega": "#ec4899",
+  "Ultra": "#a855f7", "Armor": "#eab308"
+};
+
+const ATTR_COLORS = {
+  "Neutral": "#94a3b8", "Fire": "#ef4444", "Water": "#06b6d4",
+  "Plant": "#22c55e", "Electric": "#eab308", "Earth": "#d97706",
+  "Wind": "#14b8a6", "Light": "#fde047", "Dark": "#a855f7"
+};
+
+const TYPE_META = {
+  "Vaccine": { symbol: "Va", color: "#38bdf8", desc: "Strong vs Virus, Weak vs Data" },
+  "Virus": { symbol: "Vi", color: "#f43f5e", desc: "Strong vs Data, Weak vs Vaccine" },
+  "Data": { symbol: "Da", color: "#34d399", desc: "Strong vs Vaccine, Weak vs Virus" },
+  "Free": { symbol: "Fr", color: "#cbd5e1", desc: "Neutral against all types" }
+};
+
+function normalizeStage(stageStr) {
+  if (!stageStr) return "Rookie";
+  if (stageStr.includes("Baby I") || stageStr === "Fresh" || stageStr === "Baby") return "Baby";
+  if (stageStr.includes("Baby II") || stageStr === "In-Training" || stageStr === "In-Tr.") return "In-Training";
+  if (stageStr === "Child" || stageStr === "Rookie") return "Rookie";
+  if (stageStr === "Adult" || stageStr === "Champion") return "Champion";
+  if (stageStr === "Perfect" || stageStr === "Ultimate") return "Ultimate";
+  if (stageStr === "Mega") return "Mega";
+  if (stageStr === "Ultra" || stageStr.includes("Super")) return "Ultra";
+  if (stageStr === "Armor") return "Armor";
+  return stageStr;
+}
+
+const MASTER_ROSTER = [
+  ["Kuramon", "Baby", "Free", "Neutral", 2, 0], ["Pabumon", "Baby", "Free", "Neutral", 2, 0],
+  ["Punimon", "Baby", "Free", "Neutral", 2, 0], ["Botamon", "Baby", "Free", "Neutral", 2, 0],
+  ["Poyomon", "Baby", "Free", "Neutral", 2, 0], ["Arcadiamon In-Tr.", "In-Training", "Free", "Dark", 3, 0],
+  ["Koromon", "In-Training", "Free", "Fire", 3, 0], ["Tanemon", "In-Training", "Free", "Plant", 3, 0],
+  ["Tsunomon", "In-Training", "Free", "Earth", 3, 0], ["Tsumemon", "In-Training", "Free", "Dark", 3, 0],
+  ["Tokomon", "In-Training", "Free", "Neutral", 3, 0], ["Nyaromon", "In-Training", "Free", "Light", 3, 0],
+  ["Pagumon", "In-Training", "Free", "Dark", 3, 0], ["Yokomon", "In-Training", "Free", "Plant", 3, 0],
+  ["Bukamon", "In-Training", "Free", "Water", 3, 0], ["Motimon", "In-Training", "Free", "Neutral", 3, 0],
+  ["Wanyamon", "In-Training", "Free", "Wind", 3, 0], ["Agumon", "Rookie", "Vaccine", "Fire", 5, 1],
+  ["Agumon (Blk)", "Rookie", "Virus", "Fire", 5, 1], ["Arcadiamon Rookie", "Rookie", "Virus", "Dark", 5, 1],
+  ["Armadillomon", "Rookie", "Free", "Earth", 4, 1], ["Impmon", "Rookie", "Virus", "Dark", 5, 1],
+  ["Elecmon", "Rookie", "Data", "Electric", 4, 1], ["Otamamon", "Rookie", "Virus", "Water", 4, 1],
+  ["Gaomon", "Rookie", "Data", "Neutral", 5, 1], ["Gazimon", "Rookie", "Virus", "Dark", 4, 1],
+  ["Gabumon", "Rookie", "Data", "Fire", 5, 1], ["Gabumon (Blk)", "Rookie", "Virus", "Fire", 5, 1],
+  ["Guilmon", "Rookie", "Virus", "Fire", 5, 1], ["Kudamon", "Rookie", "Vaccine", "Light", 5, 1],
+  ["Keramon", "Rookie", "Free", "Dark", 5, 1], ["Gotsumon", "Rookie", "Data", "Earth", 5, 1],
+  ["Goblimon", "Rookie", "Virus", "Earth", 4, 1], ["Gomamon", "Rookie", "Vaccine", "Water", 5, 1],
+  ["Syakomon", "Rookie", "Virus", "Water", 4, 1], ["Zubamon", "Rookie", "Vaccine", "Neutral", 5, 1],
+  ["Solarmon", "Rookie", "Vaccine", "Light", 4, 1], ["Chuumon", "Rookie", "Virus", "Earth", 4, 1],
+  ["Terriermon", "Rookie", "Vaccine", "Wind", 4, 1], ["Tentomon", "Rookie", "Vaccine", "Plant", 4, 1],
+  ["ToyAgumon", "Rookie", "Vaccine", "Neutral", 4, 1], ["Dracmon", "Rookie", "Virus", "Dark", 5, 1],
+  ["Dracomon", "Rookie", "Data", "Fire", 5, 1], ["Dorumon", "Rookie", "Data", "Neutral", 5, 1],
+  ["Hagurumon", "Rookie", "Virus", "Electric", 4, 1], ["Patamon", "Rookie", "Data", "Wind", 4, 1],
+  ["Hackmon", "Rookie", "Data", "Fire", 5, 1], ["Palmon", "Rookie", "Data", "Plant", 5, 1],
+  ["DemiDevimon", "Rookie", "Virus", "Dark", 4, 1], ["Biyomon", "Rookie", "Vaccine", "Wind", 4, 1],
+  ["Falcomon", "Rookie", "Vaccine", "Wind", 5, 1], ["FanBeemon", "Rookie", "Virus", "Plant", 4, 1],
+  ["Veemon", "Rookie", "Free", "Neutral", 5, 1], ["Salamon", "Rookie", "Vaccine", "Light", 4, 1],
+  ["Betamon", "Rookie", "Virus", "Water", 4, 1], ["Hawkmon", "Rookie", "Free", "Wind", 5, 1],
+  ["Mushroomon", "Rookie", "Virus", "Plant", 4, 1], ["Monodramon", "Rookie", "Vaccine", "Neutral", 4, 1],
+  ["Lalamon", "Rookie", "Data", "Plant", 4, 1], ["Lucemon", "Rookie", "Vaccine", "Light", 14, 1],
+  ["Lunamon", "Rookie", "Data", "Water", 5, 1], ["Renamon", "Rookie", "Data", "Plant", 5, 1],
+  ["Lopmon", "Rookie", "Data", "Earth", 4, 1], ["Wormmon", "Rookie", "Free", "Plant", 4, 1],
+  ["IceDevimon", "Champion", "Virus", "Water", 8, 1], ["Icemon", "Champion", "Data", "Water", 6, 2],
+  ["Aquilamon", "Champion", "Free", "Wind", 8, 1], ["Agunimon", "Champion", "Free", "Fire", 8, 1],
+  ["Arcadiamon Champion", "Champion", "Virus", "Dark", 8, 1], ["Ankylomon", "Champion", "Free", "Earth", 6, 2],
+  ["Ikkakumon", "Champion", "Vaccine", "Water", 8, 1], ["Wizardmon", "Champion", "Data", "Dark", 8, 1],
+  ["Lobomon", "Champion", "Free", "Light", 8, 1], ["Woodmon", "Champion", "Virus", "Plant", 6, 2],
+  ["Airdramon", "Champion", "Vaccine", "Wind", 6, 2], ["ExVeemon", "Champion", "Free", "Neutral", 8, 1],
+  ["Angemon", "Champion", "Vaccine", "Light", 8, 1], ["Ogremon", "Champion", "Virus", "Earth", 8, 1],
+  ["Guardromon", "Champion", "Virus", "Electric", 6, 2], ["Guardromon (Gold)", "Champion", "Free", "Electric", 6, 2],
+  ["GaoGamon", "Champion", "Data", "Wind", 8, 1], ["Kabuterimon", "Champion", "Vaccine", "Plant", 6, 2],
+  ["ShellNumemon", "Champion", "Virus", "Water", 6, 2], ["Gargomon", "Champion", "Vaccine", "Electric", 6, 2],
+  ["Garurumon", "Champion", "Vaccine", "Fire", 8, 1], ["Garurumon (Blk)", "Champion", "Virus", "Fire", 8, 1],
+  ["Kyubimon", "Champion", "Data", "Fire", 8, 1], ["Growlmon", "Champion", "Virus", "Fire", 8, 1],
+  ["Kurisarimon", "Champion", "Free", "Dark", 8, 1], ["Greymon", "Champion", "Vaccine", "Fire", 8, 1],
+  ["Greymon (Blue)", "Champion", "Virus", "Fire", 8, 1], ["Clockmon", "Champion", "Data", "Electric", 6, 2],
+  ["Kuwagamon", "Champion", "Virus", "Plant", 6, 2], ["Gekomon", "Champion", "Virus", "Water", 6, 2],
+  ["Geremon", "Champion", "Virus", "Electric", 6, 2], ["Coredramon (Blue)", "Champion", "Vaccine", "Wind", 8, 1],
+  ["Coredramon (Green)", "Champion", "Virus", "Earth", 8, 1], ["GoldNumemon", "Champion", "Virus", "Light", 6, 2],
+  ["Golemon", "Champion", "Virus", "Earth", 6, 2], ["Cyclonemon", "Champion", "Virus", "Earth", 6, 2],
+  ["Sangloupmon", "Champion", "Virus", "Dark", 6, 2], ["Sunflowmon", "Champion", "Data", "Plant", 6, 2],
+  ["Seadramon", "Champion", "Data", "Water", 6, 2], ["Coelamon", "Champion", "Data", "Water", 6, 2],
+  ["GeoGreymon", "Champion", "Vaccine", "Fire", 8, 1], ["Sukamon", "Champion", "Virus", "Earth", 6, 2],
+  ["Starmon", "Champion", "Data", "Neutral", 6, 2], ["Stingmon", "Champion", "Free", "Plant", 8, 1],
+  ["Strikedramon", "Champion", "Vaccine", "Earth", 8, 1], ["Zubaeagermon", "Champion", "Vaccine", "Neutral", 8, 1],
+  ["Sorcerimon", "Champion", "Vaccine", "Water", 8, 1], ["Tankmon", "Champion", "Data", "Electric", 6, 2],
+  ["Mud Frigimon", "Champion", "Data", "Earth", 6, 2], ["Tyrannomon", "Champion", "Data", "Fire", 6, 2],
+  ["Gatomon", "Champion", "Vaccine", "Light", 8, 1], ["Devimon", "Champion", "Virus", "Dark", 8, 1],
+  ["Turuiemon", "Champion", "Data", "Earth", 6, 2], ["Togemon", "Champion", "Data", "Plant", 8, 1],
+  ["Dorugamon", "Champion", "Data", "Earth", 8, 1], ["Nanimon", "Champion", "Virus", "Earth", 6, 2],
+  ["Numemon", "Champion", "Virus", "Earth", 6, 2], ["Birdramon", "Champion", "Vaccine", "Fire", 8, 1],
+  ["BaoHuckmon", "Champion", "Data", "Fire", 8, 1], ["Bakemon", "Champion", "Virus", "Dark", 6, 2],
+  ["Veedramon", "Champion", "Vaccine", "Wind", 8, 1], ["Hudiemon", "Champion", "Free", "Plant", 8, 1],
+  ["PlatinumSukamon", "Champion", "Virus", "Neutral", 6, 2], ["BlackGatomon", "Champion", "Virus", "Dark", 8, 1],
+  ["Vegiemon", "Champion", "Virus", "Plant", 6, 2], ["Peckmon", "Champion", "Vaccine", "Wind", 8, 1],
+  ["Meramon", "Champion", "Data", "Fire", 6, 2], ["Monochromon", "Champion", "Data", "Earth", 6, 2],
+  ["Frigimon", "Champion", "Vaccine", "Water", 6, 2], ["Unimon", "Champion", "Vaccine", "Wind", 6, 2],
+  ["Raptordramon", "Champion", "Vaccine", "Neutral", 6, 2], ["Raremon", "Champion", "Virus", "Earth", 6, 2],
+  ["Leomon", "Champion", "Vaccine", "Earth", 8, 1], ["Lekismon", "Champion", "Data", "Water", 6, 2],
+  ["Reppamon", "Champion", "Vaccine", "Light", 8, 1], ["Waspmon", "Champion", "Virus", "Electric", 6, 2],
+  ["MegaKabuterimon", "Ultimate", "Vaccine", "Plant", 12, 2], ["Arcadiamon Ultimate", "Ultimate", "Virus", "Dark", 14, 3],
+  ["Antylamon", "Ultimate", "Data", "Neutral", 12, 2], ["Andromon", "Ultimate", "Vaccine", "Electric", 12, 2],
+  ["Meteormon", "Ultimate", "Data", "Earth", 12, 2], ["Infermon", "Ultimate", "Free", "Dark", 14, 1],
+  ["Myotismon", "Ultimate", "Virus", "Dark", 14, 1], ["Wingdramon", "Ultimate", "Vaccine", "Wind", 14, 3],
+  ["Burning Greymon", "Ultimate", "Free", "Fire", 14, 3], ["AeroVeedramon", "Ultimate", "Vaccine", "Wind", 14, 1],
+  ["Etemon", "Ultimate", "Virus", "Dark", 12, 2], ["Angewomon", "Ultimate", "Vaccine", "Light", 14, 1],
+  ["Okuwamon", "Ultimate", "Virus", "Plant", 12, 2], ["Garudamon", "Ultimate", "Vaccine", "Fire", 12, 2],
+  ["KendoGarurumon", "Ultimate", "Free", "Light", 14, 2], ["Gigadramon", "Ultimate", "Virus", "Wind", 12, 2],
+  ["CatchMamemon", "Ultimate", "Data", "Electric", 10, 3], ["CannonBeemon", "Ultimate", "Virus", "Electric", 12, 2],
+  ["Groundramon", "Ultimate", "Virus", "Earth", 14, 3], ["GrapLeomon", "Ultimate", "Vaccine", "Electric", 12, 2],
+  ["Grademon", "Ultimate", "Vaccine", "Neutral", 12, 3], ["Crescemon", "Ultimate", "Data", "Water", 12, 3],
+  ["Cyberdramon", "Ultimate", "Vaccine", "Dark", 14, 1], ["Shakkoumon", "Ultimate", "Free", "Light", 14, 1],
+  ["Cherrymon", "Ultimate", "Virus", "Plant", 12, 2], ["Silphymon", "Ultimate", "Free", "Wind", 14, 1],
+  ["SuperStarmon", "Ultimate", "Data", "Light", 12, 2], ["SkullGreymon", "Ultimate", "Virus", "Dark", 14, 1],
+  ["Skull Satamon", "Ultimate", "Virus", "Dark", 12, 3], ["Zudomon", "Ultimate", "Vaccine", "Water", 12, 2],
+  ["SaviorHuckmon", "Ultimate", "Data", "Fire", 14, 3], ["Taomon", "Ultimate", "Data", "Dark", 12, 2],
+  ["Dragomon", "Ultimate", "Virus", "Water", 12, 3], ["Chirinmon", "Ultimate", "Vaccine", "Light", 14, 1],
+  ["Dinobeemon", "Ultimate", "Free", "Plant", 14, 3], ["Digitamamon", "Ultimate", "Data", "Neutral", 12, 2],
+  ["Skull Meramon", "Ultimate", "Data", "Fire", 12, 2], ["Duramon", "Ultimate", "Vaccine", "Neutral", 14, 3],
+  ["ShogunGekomon", "Ultimate", "Virus", "Water", 12, 2], ["Triceramon", "Ultimate", "Data", "Earth", 12, 3],
+  ["DoruGreymon", "Ultimate", "Data", "Fire", 14, 1], ["Knightmon", "Ultimate", "Data", "Neutral", 12, 2],
+  ["Datamon", "Ultimate", "Virus", "Electric", 12, 2], ["Paildramon", "Ultimate", "Free", "Neutral", 14, 1],
+  ["Panjyamon", "Ultimate", "Vaccine", "Water", 12, 2], ["Pandamon", "Ultimate", "Data", "Earth", 12, 3],
+  ["Pumpkinmon", "Ultimate", "Data", "Earth", 10, 3], ["Piximon", "Ultimate", "Data", "Light", 12, 2],
+  ["HippoGryphonmon", "Ultimate", "Data", "Wind", 12, 3], ["Phantomon", "Ultimate", "Virus", "Dark", 12, 3],
+  ["BlackKing Numemon", "Ultimate", "Virus", "Dark", 10, 3], ["BlueMeramon", "Ultimate", "Virus", "Fire", 12, 2],
+  ["Vademon", "Ultimate", "Virus", "Dark", 10, 3], ["Whamon", "Ultimate", "Vaccine", "Water", 12, 2],
+  ["MagnaAngemon", "Ultimate", "Vaccine", "Light", 14, 1], ["Volcanomon", "Ultimate", "Data", "Fire", 12, 3],
+  ["Matadormon", "Ultimate", "Virus", "Dark", 12, 3], ["MachGaogamon", "Ultimate", "Data", "Wind", 12, 2],
+  ["Mamemon", "Ultimate", "Data", "Earth", 10, 3], ["MegaSeadramon", "Ultimate", "Data", "Water", 12, 2],
+  ["Megadramon", "Ultimate", "Virus", "Wind", 12, 2], ["WarGrowlmon", "Ultimate", "Virus", "Fire", 14, 1],
+  ["MetalGreymon", "Ultimate", "Vaccine", "Fire", 14, 1], ["MetalGreymon (Blue)", "Ultimate", "Virus", "Fire", 14, 1],
+  ["Metal Tyrannomon", "Ultimate", "Virus", "Electric", 12, 2], ["MetalMamemon", "Ultimate", "Data", "Electric", 10, 3],
+  ["Monzaemon", "Ultimate", "Vaccine", "Neutral", 12, 2], ["Crowmon", "Ultimate", "Vaccine", "Wind", 12, 2],
+  ["RizeGreymon", "Ultimate", "Vaccine", "Fire", 14, 1], ["Lilamon", "Ultimate", "Data", "Plant", 12, 2],
+  ["Rapidmon", "Ultimate", "Vaccine", "Electric", 12, 2], ["Lillymon", "Ultimate", "Data", "Plant", 12, 2],
+  ["Lucemon FM", "Ultimate", "Virus", "Neutral", 22, 1], ["Lady Devimon", "Ultimate", "Virus", "Dark", 14, 1],
+  ["WereGarurumon", "Ultimate", "Vaccine", "Earth", 12, 2], ["WereGarurumon (Blk)", "Ultimate", "Virus", "Earth", 12, 2],
+  ["Wisemon", "Ultimate", "Virus", "Dark", 12, 2], ["Arcadiamon Mega", "Mega", "Virus", "Dark", 20, 2],
+  ["Alphamon", "Mega", "Vaccine", "Neutral", 22, 1], ["UlforceVeedramon", "Mega", "Vaccine", "Wind", 22, 1],
+  ["Ebemon", "Mega", "Virus", "Electric", 16, 3], ["Imperialdramon DM", "Mega", "Free", "Fire", 20, 2],
+  ["Imperialdramon FM", "Mega", "Free", "Neutral", 20, 2], ["Vikemon", "Mega", "Free", "Water", 18, 3],
+  ["Valkyrimon", "Mega", "Free", "Wind", 18, 3], ["Varodurumon", "Mega", "Vaccine", "Light", 20, 2],
+  ["Venom Myotismon", "Mega", "Virus", "Dark", 20, 2], ["WarGreymon", "Mega", "Vaccine", "Fire", 20, 2],
+  ["Ophanimon", "Mega", "Vaccine", "Light", 20, 2], ["Gaiomon", "Mega", "Virus", "Fire", 18, 3],
+  ["KaiserGreymon", "Mega", "Free", "Fire", 20, 2], ["ChaosGallantmon", "Mega", "Virus", "Dark", 22, 1],
+  ["Chaosdramon", "Mega", "Virus", "Electric", 20, 2], ["Gankoomon", "Mega", "Data", "Fire", 22, 1],
+  ["KingEtemon", "Mega", "Virus", "Earth", 18, 3], ["Kuzuhamon", "Mega", "Data", "Dark", 18, 3],
+  ["GranKuwagamon", "Mega", "Virus", "Plant", 18, 3], ["GranDracmon", "Mega", "Virus", "Dark", 20, 2],
+  ["GroundLocomon", "Mega", "Data", "Electric", 18, 3], ["Gryphonmon", "Mega", "Data", "Wind", 18, 3],
+  ["Craniamon", "Mega", "Vaccine", "Earth", 22, 1], ["Kerpymon (Blk)", "Mega", "Virus", "Dark", 20, 1],
+  ["Kerpymon (Good)", "Mega", "Vaccine", "Light", 20, 1], ["Goldramon", "Mega", "Vaccine", "Light", 20, 2],
+  ["SaberLeomon", "Mega", "Data", "Wind", 18, 3], ["Sakuyamon", "Mega", "Data", "Light", 18, 3],
+  ["Jesmon", "Mega", "Data", "Neutral", 22, 1], ["ShineGreymon", "Mega", "Vaccine", "Light", 20, 2],
+  ["ShineGreymon BM", "Mega", "Vaccine", "Fire", 22, 2], ["Justimon", "Mega", "Vaccine", "Light", 18, 3],
+  ["Kentaurosmon", "Mega", "Vaccine", "Light", 22, 1], ["Slayerdramon", "Mega", "Vaccine", "Wind", 20, 2],
+  ["Seraphimon", "Mega", "Vaccine", "Light", 20, 2], ["MegaGargomon", "Mega", "Vaccine", "Electric", 18, 3],
+  ["Darkdramon", "Mega", "Virus", "Electric", 18, 3], ["TigerVespamon", "Mega", "Virus", "Electric", 18, 3],
+  ["Titamon", "Mega", "Virus", "Earth", 18, 3], ["TyrantKabuterimon", "Mega", "Virus", "Plant", 20, 2],
+  ["Dianamon", "Mega", "Data", "Water", 20, 2], ["Diaboromon", "Mega", "Free", "Dark", 20, 1],
+  ["Creepymon", "Mega", "Virus", "Dark", 22, 1], ["Gallantmon", "Mega", "Vaccine", "Light", 22, 1],
+  ["Dynasmon", "Mega", "Data", "Wind", 22, 1], ["Durandamon", "Mega", "Vaccine", "Neutral", 20, 2],
+  ["Leopardmon", "Mega", "Data", "Light", 22, 1], ["Leopardmon LM", "Mega", "Data", "Light", 22, 1],
+  ["Dorugoramon", "Mega", "Data", "Neutral", 18, 3], ["Neptunemon", "Mega", "Vaccine", "Water", 18, 3],
+  ["HiAndromon", "Mega", "Vaccine", "Electric", 18, 3], ["PileVolcamon", "Mega", "Data", "Fire", 18, 3],
+  ["Barbamon", "Mega", "Virus", "Dark", 22, 1], ["BanchoLeomon", "Mega", "Vaccine", "Earth", 22, 1],
+  ["Piedmon", "Mega", "Virus", "Dark", 18, 3], ["Puppetmon", "Mega", "Virus", "Plant", 18, 3],
+  ["PlatinumNumemon", "Mega", "Virus", "Neutral", 16, 3], ["BlackWarGreymon", "Mega", "Virus", "Fire", 20, 2],
+  ["PrinceMamemon", "Mega", "Data", "Neutral", 16, 3], ["Brakedramon", "Mega", "Virus", "Earth", 20, 2],
+  ["Plesiomon", "Mega", "Data", "Water", 18, 3], ["HerculesKabuterimon", "Mega", "Vaccine", "Plant", 18, 3],
+  ["Beelzemon", "Mega", "Virus", "Dark", 22, 1], ["Beelzemon BM", "Mega", "Virus", "Dark", 25, 1],
+  ["Belphemon SM", "Mega", "Virus", "Dark", 22, 1], ["Hououmon", "Mega", "Vaccine", "Fire", 18, 3],
+  ["Magnadramon", "Mega", "Vaccine", "Light", 20, 2], ["Boltmon", "Mega", "Data", "Electric", 18, 3],
+  ["MagnaGarurumon", "Mega", "Data", "Light", 20, 2], ["MagnaGarurumon (SV)", "Mega", "Data", "Light", 20, 2],
+  ["Mastemon", "Mega", "Vaccine", "Light", 22, 1], ["MarineAngemon", "Mega", "Vaccine", "Water", 14, 3],
+  ["Minervamon", "Mega", "Virus", "Neutral", 20, 2], ["MirageGaogamon", "Mega", "Data", "Wind", 20, 2],
+  ["MirageGaogamon BM", "Mega", "Data", "Wind", 22, 2], ["Machinedramon", "Mega", "Virus", "Electric", 18, 3],
+  ["Megidramon", "Mega", "Virus", "Dark", 22, 1], ["MetalEtemon", "Mega", "Virus", "Earth", 18, 3],
+  ["MetalGarurumon", "Mega", "Data", "Water", 20, 2], ["MetalGarurumon (Blk)", "Mega", "Virus", "Water", 20, 2],
+  ["MetalSeadramon", "Mega", "Data", "Water", 18, 3], ["Merukimon", "Mega", "Virus", "Wind", 22, 1],
+  ["RustTyranomon", "Mega", "Virus", "Electric", 22, 1], ["Leviamon", "Mega", "Virus", "Water", 22, 1],
+  ["Lilithmon", "Mega", "Virus", "Dark", 22, 1], ["Ravemon", "Mega", "Vaccine", "Wind", 18, 3],
+  ["Ravemon BM", "Mega", "Vaccine", "Wind", 22, 2], ["Crusadermon", "Mega", "Virus", "Dark", 22, 1],
+  ["Rosemon", "Mega", "Data", "Plant", 18, 3], ["Rosemon BM", "Mega", "Data", "Plant", 20, 2],
+  ["Lotosmon", "Mega", "Data", "Plant", 18, 3], ["Armageddemon", "Ultra", "Free", "Dark", 25, 1],
+  ["Arcadiamon Ultra", "Ultra", "Virus", "Dark", 25, 1], ["Alphamon Ouryuken", "Ultra", "Vaccine", "Neutral", 25, 1],
+  ["Imperialdramon PM", "Ultra", "Vaccine", "Light", 25, 1], ["Examon", "Ultra", "Data", "Wind", 25, 1],
+  ["Omnimon", "Ultra", "Vaccine", "Light", 25, 1], ["Omnimon Zwart", "Ultra", "Vaccine", "Dark", 25, 1],
+  ["Chaosmon", "Ultra", "Vaccine", "Neutral", 25, 1], ["Chaosmon VA", "Ultra", "Vaccine", "Light", 25, 1],
+  ["Susanoomon", "Ultra", "Vaccine", "Light", 25, 1], ["Gallantmon CM", "Ultra", "Vaccine", "Light", 25, 1],
+  ["Belphemon RM", "Ultra", "Virus", "Dark", 25, 1], ["Lucemon SM", "Ultra", "Virus", "Dark", 25, 1],
+  ["Flamedramon", "Armor", "Free", "Fire", 8, 2], ["Magnamon", "Armor", "Free", "Earth", 22, 1],
+  ["Rapidmon (Armor)", "Armor", "Free", "Light", 18, 3], ["Shoutmon", "Rookie", "Free", "Fire", 5, 1],
+  ["OmniShoutmon", "Mega", "Free", "Fire", 20, 2], ["Ryudamon", "Rookie", "Vaccine", "Earth", 5, 1],
+  ["Ginryumon", "Champion", "Vaccine", "Earth", 8, 1], ["Hisyaryumon", "Ultimate", "Vaccine", "Earth", 14, 2],
+  ["Ouryumon", "Mega", "Vaccine", "Earth", 20, 2], ["Apocalymon", "Ultra", "Free", "Neutral", 25, 1],
+  ["Sistermon Blanc", "Rookie", "Vaccine", "Light", 6, 2], ["Sistermon Blanc (Awakened)", "Rookie", "Vaccine", "Light", 14, 1],
+  ["Sistermon Ciel", "Champion", "Vaccine", "Light", 8, 2], ["Sistermon Ciel (Awakened)", "Champion", "Vaccine", "Light", 16, 1],
+  ["Alphamon NX", "Mega", "Vaccine", "Neutral", 6, 0], ["Crusadermon NX", "Mega", "Virus", "Dark", 6, 0],
+  ["Leopardmon NX", "Mega", "Data", "Light", 6, 0], ["Omnimon NX", "Mega", "Vaccine", "Light", 6, 0],
+  ["Gallantmon NX", "Mega", "Vaccine", "Light", 6, 0]
+];
+
+const DIGIMON_DATA = MASTER_ROSTER.map((row, idx) => {
+  const id = idx + 1;
+  const [name, rawStage, type, attr, mem, slots] = row;
+  const stage = normalizeStage(rawStage);
+  return {
+    id, name, stage, type, attr, mem, slots,
+    desc: `Field Guide Entry #${String(id).padStart(3, '0')}: ${name}. Stage: ${stage}. Type: ${type}. Attribute: ${attr}. Memory: ${mem}. Equip Slots: ${slots}.`
+  };
+});
+
+const canvas = document.getElementById("net-canvas");
+const ctx = canvas.getContext("2d");
+let animFrameReq = null;
+
+let selectedNodeId = null;
+let currentLayout = "hierarchy";
+let viewX = 80;
+let viewY = 80;
+let viewScale = 0.85;
+
+const nodePositions = new Map();
+const targetPositions = new Map();
+let transitionAnimId = null;
+
+const activeFilters = {
+  search: "",
+  stages: new Set(Object.keys(STAGE_ORDER)),
+  types: new Set(Object.keys(TYPE_META)),
+  attrs: new Set(Object.keys(ATTR_COLORS))
+};
+
+/* PERSISTENT CHECKLIST STATE */
+let checkedSet = new Set();
+try {
+  const stored = localStorage.getItem("cybersleuth_digidex_tracked");
+  if (stored) checkedSet = new Set(JSON.parse(stored));
+} catch(e) {}
+
+const RAW_INDEX_EVOLUTIONS = [
+  [1,6,"Level 10 | CAM 20%"], [1,10,"Level 10 | SPD 30"], [1,13,"Level 10 | ATK 25"],
+  [2,8,"Level 9 | INT 20"], [2,14,"Level 9 | SP 25"], [2,16,"Level 9 | HP 100"],
+  [3,9,"Level 11 | DEF 25"], [3,12,"Level 11 | INT 25"], [4,7,"Level 9 | ATK 20"],
+  [4,17,"Level 9 | SPD 25"], [5,11,"Level 10 | SP 20"], [5,15,"Level 10 | HP 150"],
+  [6,20,"Level 15 | ATK 40 | CAM 10%"], [7,18,"Level 14 | ATK 40"], [7,29,"Level 16 | ATK 45 | CAM 25%"],
+  [7,41,"Level 14 | DEF 35"], [7,43,"Level 15 | ATK 40"], [7,47,"Level 16 | ATK 50 | CAM 50%"],
+  [7,326,"Level 15 | ATK 45"], [8,48,"Level 14 | INT 35"], [8,52,"Level 14 | SPD 40"],
+  [8,59,"Level 14 | HP 300"], [8,62,"Level 15 | INT 40"], [9,27,"Level 15 | ATK 40"],
+  [9,28,"Level 15 | ATK 45"], [9,33,"Level 14 | DEF 40"], [9,36,"Level 14 | INT 35"],
+  [9,53,"Level 14 | SPD 35"], [9,58,"Level 14 | SP 30"], [10,19,"Level 15 | ATK 40"],
+  [10,31,"Level 15 | INT 40"], [10,42,"Level 14 | SPD 40"], [10,49,"Level 15 | ATK 45 | CAM 15%"],
+  [11,46,"Level 14 | SP 35"], [11,51,"Level 14 | SPD 35"], [11,56,"Level 14 | INT 35"],
+  [11,60,"Level 14 | HP 300"], [11,333,"Level 15 | INT 40"], [12,21,"Level 14 | DEF 35"],
+  [12,39,"Level 14 | SPD 35"], [12,54,"Level 14 | INT 35"], [12,61,"Level 15 | INT 45"],
+  [13,22,"Level 15 | ATK 45"], [13,26,"Level 14 | SPD 35"], [13,38,"Level 14 | DEF 35"],
+  [13,63,"Level 15 | INT 40"], [14,23,"Level 14 | SPD 35"], [14,50,"Level 14 | SP 35"],
+  [14,57,"Level 14 | HP 300"], [14,64,"Level 15 | SP 40"], [15,24,"Level 14 | INT 35"],
+  [15,34,"Level 14 | DEF 35"], [15,35,"Level 14 | SP 35"], [15,55,"Level 15 | INT 40"],
+  [16,32,"Level 14 | DEF 40"], [16,37,"Level 14 | INT 35"], [16,40,"Level 14 | HP 300"],
+  [16,45,"Level 15 | SP 35"], [17,25,"Level 15 | SPD 40"], [17,30,"Level 15 | INT 40"],
+  [17,44,"Level 14 | DEF 35"], [17,328,"Level 15 | ATK 40"], [18,68,"Level 30 | ATK 80 | CAM 25%"],
+  [18,90,"Level 30 | ATK 85"], [18,105,"Level 30 | ATK 75"], [18,106,"Level 30 | ATK 80"],
+  [18,114,"Level 30 | ATK 70"], [18,131,"Level 30 | ATK 75"], [19,88,"Level 30 | ATK 85 | CAM 25%"],
+  [19,91,"Level 30 | ATK 80"], [19,100,"Level 30 | DEF 75"], [19,112,"Level 30 | ATK 75"],
+  [19,114,"Level 30 | ATK 75"], [19,132,"Level 30 | ATK 80"], [20,69,"Level 32 | ATK 90 | CAM 50%"],
+  [20,89,"Level 30 | ATK 85"], [20,137,"Level 30 | SPD 80"], [21,70,"Level 28 | DEF 70"],
+  [21,95,"Level 30 | DEF 80"], [21,98,"Level 30 | HP 600"], [21,99,"Level 30 | DEF 75"],
+  [21,100,"Level 30 | DEF 70"], [21,112,"Level 30 | DEF 75"], [22,65,"Level 30 | INT 80"],
+  [22,72,"Level 30 | ATK 85"], [22,78,"Level 30 | INT 75"], [22,111,"Level 30 | SPD 80"],
+  [22,124,"Level 30 | ATK 75"], [22,128,"Level 30 | ATK 80"], [23,85,"Level 28 | SPD 75"],
+  [23,86,"Level 30 | SPD 80"], [23,95,"Level 30 | DEF 75"], [23,106,"Level 30 | ATK 75"],
+  [23,120,"Level 30 | SPD 80"], [23,137,"Level 30 | SPD 75"], [24,83,"Level 28 | INT 70"],
+  [24,94,"Level 30 | SP 70"], [24,103,"Level 30 | INT 75"], [24,104,"Level 30 | HP 650"],
+  [24,121,"Level 30 | INT 80"], [24,136,"Level 30 | INT 75"], [25,78,"Level 30 | SPD 80"],
+  [25,81,"Level 30 | SPD 85"], [25,84,"Level 30 | ATK 75"], [25,101,"Level 30 | ATK 80"],
+  [25,118,"Level 30 | SPD 80"], [25,137,"Level 30 | SPD 80"], [26,81,"Level 30 | ATK 80"],
+  [26,86,"Level 30 | SPD 80"], [26,89,"Level 30 | ATK 75"], [26,119,"Level 30 | ATK 80"],
+  [26,120,"Level 30 | SPD 75"], [26,137,"Level 30 | SPD 80"], [27,73,"Level 30 | INT 80"],
+  [27,85,"Level 30 | SPD 80"], [27,119,"Level 30 | ATK 75"], [27,121,"Level 30 | INT 75"],
+  [27,125,"Level 30 | ATK 80"], [27,133,"Level 30 | ATK 80"], [28,86,"Level 30 | SPD 80"],
+  [28,129,"Level 30 | ATK 85"], [28,133,"Level 30 | ATK 75"], [28,136,"Level 30 | INT 80"],
+  [28,139,"Level 30 | SPD 75"], [29,68,"Level 30 | ATK 80"], [29,88,"Level 30 | ATK 85"],
+  [29,91,"Level 30 | ATK 80"], [29,105,"Level 30 | ATK 75"], [29,114,"Level 30 | ATK 70"],
+  [29,131,"Level 30 | ATK 75"], [30,73,"Level 30 | ATK 80"], [30,77,"Level 30 | ATK 85"],
+  [30,98,"Level 30 | HP 650"], [30,130,"Level 30 | DEF 75"], [30,139,"Level 30 | SPD 80"],
+  [31,69,"Level 30 | ATK 85"], [31,72,"Level 30 | ATK 80"], [31,89,"Level 30 | ATK 80"],
+  [31,124,"Level 30 | ATK 75"], [31,127,"Level 30 | DEF 75"], [32,66,"Level 28 | INT 70"],
+  [32,70,"Level 28 | DEF 70"], [32,92,"Level 30 | SP 70"], [32,99,"Level 30 | DEF 75"],
+  [32,107,"Level 30 | HP 600"], [32,112,"Level 30 | DEF 70"], [33,78,"Level 30 | INT 80"],
+  [33,81,"Level 30 | SPD 80"], [33,88,"Level 30 | ATK 80"], [33,91,"Level 30 | ATK 80"],
+  [33,97,"Level 30 | DEF 75"], [33,120,"Level 30 | SPD 80"], [34,66,"Level 28 | INT 70"],
+  [34,70,"Level 28 | DEF 70"], [34,71,"Level 30 | HP 650"], [34,109,"Level 30 | HP 600"],
+  [34,111,"Level 30 | SPD 80"], [34,133,"Level 30 | ATK 75"], [35,71,"Level 30 | HP 600"],
+  [35,83,"Level 28 | INT 70"], [35,94,"Level 30 | SP 70"], [35,103,"Level 30 | INT 75"],
+  [35,104,"Level 30 | HP 600"], [36,98,"Level 30 | HP 650"], [36,110,"Level 30 | DEF 75"],
+  [36,123,"Level 30 | ATK 80"], [36,329,"Level 30 | ATK 85 | CAM 25%"], [37,80,"Level 30 | INT 80"],
+  [37,92,"Level 30 | SP 75"], [37,95,"Level 30 | DEF 80"], [37,99,"Level 30 | DEF 75"],
+  [37,107,"Level 30 | HP 600"], [37,131,"Level 30 | ATK 75"], [38,106,"Level 30 | ATK 75"],
+  [38,120,"Level 30 | SPD 80"], [38,128,"Level 30 | ATK 80"], [38,136,"Level 30 | INT 75"],
+  [39,71,"Level 30 | HP 650"], [39,84,"Level 30 | ATK 80"], [39,115,"Level 30 | SPD 85"],
+  [39,134,"Level 30 | SPD 80"], [39,325,"Level 30 | ATK 80"], [40,82,"Level 30 | INT 80"],
+  [40,93,"Level 30 | INT 75"], [40,102,"Level 30 | DEF 75"], [40,108,"Level 30 | DEF 70"],
+  [40,140,"Level 30 | ATK 80"], [41,79,"Level 30 | INT 80"], [41,80,"Level 30 | INT 75"],
+  [41,90,"Level 30 | ATK 80"], [41,92,"Level 30 | SP 70"], [41,106,"Level 30 | ATK 75"],
+  [41,107,"Level 30 | HP 600"], [42,69,"Level 30 | ATK 85"], [42,101,"Level 30 | ATK 75"],
+  [42,116,"Level 30 | ATK 80"], [42,136,"Level 30 | INT 75"], [42,335,"Level 30 | INT 80"],
+  [43,96,"Level 30 | ATK 85"], [43,97,"Level 30 | DEF 80"], [43,125,"Level 30 | ATK 80"],
+  [43,329,"Level 30 | ATK 85"], [44,79,"Level 30 | INT 80"], [44,100,"Level 30 | DEF 75"],
+  [44,119,"Level 30 | ATK 80"], [44,135,"Level 30 | SPD 75"], [44,140,"Level 30 | ATK 80"],
+  [45,79,"Level 30 | INT 85"], [45,92,"Level 30 | SP 75"], [45,98,"Level 30 | HP 600"],
+  [45,107,"Level 30 | HP 600"], [45,127,"Level 30 | DEF 75"], [46,76,"Level 30 | INT 80"],
+  [46,77,"Level 30 | ATK 85"], [46,115,"Level 30 | SPD 80"], [46,122,"Level 30 | SPD 75"],
+  [46,134,"Level 30 | SPD 80"], [46,139,"Level 30 | SPD 80"], [47,90,"Level 30 | ATK 85"],
+  [47,105,"Level 30 | ATK 80"], [47,110,"Level 30 | DEF 75"], [47,123,"Level 30 | ATK 80"],
+  [47,127,"Level 30 | DEF 75"], [47,132,"Level 30 | ATK 80"], [48,74,"Level 30 | INT 80"],
+  [48,93,"Level 30 | INT 75"], [48,102,"Level 30 | DEF 75"], [48,113,"Level 30 | SPD 75"],
+  [48,118,"Level 30 | SPD 80"], [48,129,"Level 30 | ATK 80"], [49,65,"Level 30 | INT 85"],
+  [49,87,"Level 30 | ATK 80"], [49,89,"Level 30 | ATK 80"], [49,116,"Level 30 | ATK 80"],
+  [49,124,"Level 30 | ATK 75"], [50,67,"Level 30 | SPD 85"], [50,75,"Level 30 | INT 80"],
+  [50,82,"Level 30 | INT 75"], [50,87,"Level 30 | ATK 80"], [50,122,"Level 30 | SPD 75"],
+  [51,67,"Level 30 | SPD 80"], [51,76,"Level 30 | INT 80"], [51,108,"Level 30 | DEF 75"],
+  [51,130,"Level 30 | DEF 75"], [52,80,"Level 30 | INT 80"], [52,108,"Level 30 | DEF 75"],
+  [52,118,"Level 30 | SPD 80"], [52,135,"Level 30 | SPD 75"], [52,140,"Level 30 | ATK 80"],
+  [53,73,"Level 30 | INT 80"], [53,76,"Level 30 | ATK 85"], [53,109,"Level 30 | HP 600"],
+  [53,125,"Level 30 | ATK 80"], [53,323,"Level 30 | Human Spirit"], [53,324,"Level 30 | Beast Spirit"],
+  [54,111,"Level 30 | SPD 80"], [54,115,"Level 30 | SPD 80"], [54,123,"Level 30 | ATK 80"],
+  [54,125,"Level 30 | ATK 80"], [54,133,"Level 30 | ATK 75"], [54,139,"Level 30 | SPD 75"],
+  [55,75,"Level 30 | INT 80"], [55,83,"Level 28 | INT 70"], [55,94,"Level 30 | SP 70"],
+  [55,103,"Level 30 | INT 75"], [55,121,"Level 30 | INT 80"], [55,129,"Level 30 | ATK 80"],
+  [56,67,"Level 30 | SPD 80"], [56,75,"Level 30 | INT 80"], [56,122,"Level 30 | SPD 75"],
+  [56,130,"Level 30 | DEF 75"], [56,131,"Level 30 | ATK 75"], [57,74,"Level 30 | INT 80"],
+  [57,102,"Level 30 | DEF 75"], [57,113,"Level 30 | SPD 75"], [57,129,"Level 30 | ATK 80"],
+  [58,89,"Level 30 | ATK 80"], [58,96,"Level 30 | ATK 85"], [58,109,"Level 30 | HP 600"],
+  [58,119,"Level 30 | ATK 80"], [58,135,"Level 30 | SPD 75"], [59,74,"Level 30 | INT 80"],
+  [59,102,"Level 30 | DEF 75"], [59,118,"Level 30 | SPD 80"], [59,129,"Level 30 | ATK 80"],
+  [60,77,"Level 30 | ATK 85"], [60,116,"Level 30 | ATK 80"], [60,213,"Level 55 | CAM 100%"],
+  [61,101,"Level 30 | ATK 75"], [61,115,"Level 30 | SPD 80"], [61,138,"Level 30 | SPD 80"],
+  [61,335,"Level 30 | INT 80"], [62,74,"Level 30 | INT 80"], [62,85,"Level 30 | SPD 80"],
+  [62,87,"Level 30 | ATK 80"], [62,117,"Level 30 | DEF 75"], [62,128,"Level 30 | ATK 80"],
+  [62,138,"Level 30 | SPD 80"], [63,72,"Level 30 | ATK 80"], [63,84,"Level 30 | ATK 80"],
+  [63,113,"Level 30 | SPD 75"], [63,116,"Level 30 | ATK 80"], [63,117,"Level 30 | DEF 75"],
+  [63,128,"Level 30 | ATK 80"], [64,65,"Level 30 | INT 85"], [64,82,"Level 30 | INT 75"],
+  [64,93,"Level 30 | INT 75"], [64,108,"Level 30 | DEF 70"], [64,126,"Level 30 | HP 600"],
+  [64,140,"Level 30 | ATK 80"]
+];
+
+let EVO_EDGES = [];
+let EVO_MAP = new Map();
+let DEVO_MAP = new Map();
+
+function rebuildEvolutionGraph(edgesArray) {
+  EVO_EDGES = [];
+  EVO_MAP = new Map();
+  DEVO_MAP = new Map();
+  edgesArray.forEach(([fromId, toId, req]) => {
+    const f = parseInt(fromId, 10);
+    const t = parseInt(toId, 10);
+    if (f >= 1 && f <= 341 && t >= 1 && t <= 341) {
+      const reqStr = req || "Evolution Requirement";
+      EVO_EDGES.push({ from: f, to: t, req: reqStr });
+      if (!EVO_MAP.has(f)) EVO_MAP.set(f, []);
+      EVO_MAP.get(f).push({ to: t, req: reqStr });
+      if (!DEVO_MAP.has(t)) DEVO_MAP.set(t, []);
+      DEVO_MAP.get(t).push({ from: f, req: reqStr });
+    }
+  });
+  requestCanvasFrame();
+  if (selectedNodeId) {
+    triggerSelectDigimon(selectedNodeId, false);
+  }
+}
+rebuildEvolutionGraph(RAW_INDEX_EVOLUTIONS);
+
+function saveChecklist() {
+  try {
+    localStorage.setItem("cybersleuth_digidex_tracked", JSON.stringify([...checkedSet]));
+  } catch(e) {}
+  updateChecklistUI();
+  requestCanvasFrame();
+  renderNumericalGrid();
+}
+
+/* LAYOUT COMPUTATIONS */
+function computeHierarchyLayout() {
+  const laneX = {
+    "Baby": 140, "In-Training": 420, "Rookie": 740, "Champion": 1100,
+    "Ultimate": 1500, "Mega": 1920, "Ultra": 2340, "Armor": 920
+  };
+  const counters = {};
+  Object.keys(laneX).forEach(k => counters[k] = 0);
+  DIGIMON_DATA.forEach(d => {
+    const x = laneX[d.stage] || 1000;
+    const count = counters[d.stage]++;
+    let y = 120 + count * 54;
+    if (d.stage === "Armor") {
+      y = 900 + count * 60;
+    }
+    targetPositions.set(d.id, { x, y });
+  });
+}
+
+function computeForceLayout() {
+  const nodes = DIGIMON_DATA.map(d => {
+    const existing = nodePositions.get(d.id);
+    const stageIdx = STAGE_ORDER[d.stage] ?? 3;
+    const angle = (d.id / 341) * Math.PI * 2;
+    const initR = 160 + stageIdx * 200;
+    return {
+      id: d.id,
+      x: existing && isFinite(existing.x) ? existing.x : 1400 + Math.cos(angle) * initR,
+      y: existing && isFinite(existing.y) ? existing.y : 1300 + Math.sin(angle) * initR
+    };
+  });
+
+  const nodeIndexMap = new Map();
+  nodes.forEach((n, idx) => nodeIndexMap.set(n.id, idx));
+
+  for (let iter = 0; iter < 60; iter++) {
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        let dx = nodes[j].x - nodes[i].x;
+        let dy = nodes[j].y - nodes[i].y;
+        let dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        if (dist < 180) {
+          let force = (180 - dist) / dist * 0.15;
+          nodes[i].x -= dx * force;
+          nodes[i].y -= dy * force;
+          nodes[j].x += dx * force;
+          nodes[j].y += dy * force;
+        }
+      }
+    }
+    EVO_EDGES.forEach(edge => {
+      const uIdx = nodeIndexMap.get(edge.from);
+      const vIdx = nodeIndexMap.get(edge.to);
+      if (uIdx !== undefined && vIdx !== undefined) {
+        let dx = nodes[vIdx].x - nodes[uIdx].x;
+        let dy = nodes[vIdx].y - nodes[uIdx].y;
+        let dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        let desired = 150;
+        let pull = (dist - desired) * 0.03;
+        nodes[uIdx].x += (dx / dist) * pull;
+        nodes[uIdx].y += (dy / dist) * pull;
+        nodes[vIdx].x -= (dx / dist) * pull;
+        nodes[vIdx].y -= (dy / dist) * pull;
+      }
+    });
+  }
+  nodes.forEach(n => {
+    targetPositions.set(n.id, { x: n.x, y: n.y });
+  });
+}
+
+function computeLineageLayout() {
+  const count = DIGIMON_DATA.length;
+  DIGIMON_DATA.forEach((d, idx) => {
+    const stageR = {
+      "Baby": 100, "In-Training": 260, "Rookie": 500, "Champion": 780,
+      "Ultimate": 1100, "Mega": 1440, "Ultra": 1720, "Armor": 640
+    }[d.stage] || 700;
+    const theta = (idx / count) * Math.PI * 4.6;
+    const x = 1400 + stageR * Math.cos(theta);
+    const y = 1400 + stageR * Math.sin(theta);
+    targetPositions.set(d.id, { x, y });
+  });
+}
+
+function triggerLayoutTransition() {
+  if (transitionAnimId) {
+    cancelAnimationFrame(transitionAnimId);
+    transitionAnimId = null;
+  }
+  if (nodePositions.size === 0) {
+    targetPositions.forEach((pos, id) => {
+      nodePositions.set(id, { x: pos.x, y: pos.y, vx: 0, vy: 0 });
+    });
+    requestCanvasFrame();
+    return;
+  }
+  const springK = 0.12;
+  const damping = 0.72;
+  
+  function stepTransition() {
+    let maxDelta = 0;
+    DIGIMON_DATA.forEach(d => {
+      const cur = nodePositions.get(d.id);
+      const tgt = targetPositions.get(d.id);
+      if (!cur || !tgt) return;
+      cur.vx = (cur.vx || 0) * damping + (tgt.x - cur.x) * springK;
+      cur.vy = (cur.vy || 0) * damping + (tgt.y - cur.y) * springK;
+      cur.x += cur.vx;
+      cur.y += cur.vy;
+      const delta = Math.abs(tgt.x - cur.x) + Math.abs(tgt.y - cur.y) + Math.abs(cur.vx) + Math.abs(cur.vy);
+      if (delta > maxDelta) maxDelta = delta;
+    });
+    requestCanvasFrame();
+    if (maxDelta > 0.4) {
+      transitionAnimId = requestAnimationFrame(stepTransition);
+    } else {
+      targetPositions.forEach((pos, id) => {
+        const p = nodePositions.get(id);
+        if (p) { p.x = pos.x; p.y = pos.y; p.vx = 0; p.vy = 0; }
+      });
+      transitionAnimId = null;
+      requestCanvasFrame();
+    }
+  }
+  transitionAnimId = requestAnimationFrame(stepTransition);
+}
+
+function centerViewOnSort() {
+  const cw = canvas.clientWidth || window.innerWidth;
+  const ch = canvas.clientHeight || window.innerHeight;
+  if (selectedNodeId && targetPositions.has(selectedNodeId)) {
+    const target = targetPositions.get(selectedNodeId);
+    viewScale = Math.max(0.75, Math.min(viewScale, 1.3));
+    viewX = cw / 2 - target.x * viewScale;
+    viewY = ch / 2 - target.y * viewScale;
+  } else {
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    targetPositions.forEach(pos => {
+      if (pos.x < minX) minX = pos.x;
+      if (pos.x > maxX) maxX = pos.x;
+      if (pos.y < minY) minY = pos.y;
+      if (pos.y > maxY) maxY = pos.y;
+    });
+    if (isFinite(minX) && isFinite(maxX)) {
+      const layoutWidth = maxX - minX + 240;
+      const layoutHeight = maxY - minY + 240;
+      const centerX = (minX + maxX) / 2;
+      const centerY = (minY + maxY) / 2;
+      const fitScaleX = cw / layoutWidth;
+      const fitScaleY = ch / layoutHeight;
+      viewScale = Math.min(Math.max(0.2, Math.min(fitScaleX, fitScaleY)), 0.65);
+      viewX = cw / 2 - centerX * viewScale;
+      viewY = ch / 2 - centerY * viewScale;
+    }
+  }
+  updateTooltipPosition();
+}
+
+function recomputeLayouts() {
+  if (currentLayout === "hierarchy") computeHierarchyLayout();
+  else if (currentLayout === "force") computeForceLayout();
+  else if (currentLayout === "lineage") computeLineageLayout();
+  centerViewOnSort();
+  triggerLayoutTransition();
+}
+
+/* CANVAS ENGINE */
+function resizeCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = canvas.clientWidth * dpr;
+  canvas.height = canvas.clientHeight * dpr;
+  ctx.scale(dpr, dpr);
+  requestCanvasFrame();
+}
+window.addEventListener("resize", resizeCanvas);
+
+function requestCanvasFrame() {
+  if (!animFrameReq) {
+    animFrameReq = requestAnimationFrame(drawNet);
+  }
+}
+
+function drawNet() {
+  animFrameReq = null;
+  if (currentLayout === "numerical") return;
+  const width = canvas.clientWidth;
+  const height = canvas.clientHeight;
+  ctx.clearRect(0, 0, width, height);
+  ctx.save();
+  ctx.translate(viewX, viewY);
+  ctx.scale(viewScale, viewScale);
+
+  const minX = -viewX / viewScale - 150;
+  const maxX = (width - viewX) / viewScale + 150;
+  const minY = -viewY / viewScale - 150;
+  const maxY = (height - viewY) / viewScale + 150;
+
+  const activeEvoSet = new Set();
+  const activeDevoSet = new Set();
+  if (selectedNodeId) {
+    (EVO_MAP.get(selectedNodeId) || []).forEach(edge => activeEvoSet.add(edge.to));
+    (DEVO_MAP.get(selectedNodeId) || []).forEach(edge => activeDevoSet.add(edge.from));
+  }
+
+  // Lines
+  ctx.lineWidth = 1.6;
+  EVO_EDGES.forEach(edge => {
+    const p1 = nodePositions.get(edge.from);
+    const p2 = nodePositions.get(edge.to);
+    if (!p1 || !p2) return;
+    if ((p1.x < minX && p2.x < minX) || (p1.x > maxX && p2.x > maxX) ||
+        (p1.y < minY && p2.y < minY) || (p1.y > maxY && p2.y > maxY)) {
+      return;
+    }
+
+    const isEvo = selectedNodeId === edge.from;
+    const isDevo = selectedNodeId === edge.to;
+    if (selectedNodeId) {
+      if (isEvo) {
+        ctx.strokeStyle = "#00ff66";
+        ctx.lineWidth = 3.2;
+      } else if (isDevo) {
+        ctx.strokeStyle = "#ff0055";
+        ctx.lineWidth = 3.2;
+      } else {
+        ctx.strokeStyle = "rgba(15, 32, 77, 0.12)";
+        ctx.lineWidth = 1.0;
+      }
+    } else {
+      ctx.strokeStyle = "rgba(0, 242, 254, 0.18)";
+      ctx.lineWidth = 1.4;
+    }
+
+    ctx.beginPath();
+    if (currentLayout === "hierarchy") {
+      const midX = (p1.x + p2.x) / 2;
+      ctx.moveTo(p1.x, p1.y);
+      ctx.bezierCurveTo(midX, p1.y, midX, p2.y, p2.x, p2.y);
+    } else {
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+    }
+    ctx.stroke();
+  });
+
+  // Nodes
+  const nodeW = 54;
+  const nodeH = 32;
+  const radius = 6;
+  const query = activeFilters.search.toLowerCase().trim();
+
+  DIGIMON_DATA.forEach(d => {
+    const pos = nodePositions.get(d.id);
+    if (!pos) return;
+    if (pos.x < minX || pos.x > maxX || pos.y < minY || pos.y > maxY) return;
+
+    const matchesStage = activeFilters.stages.has(d.stage);
+    const matchesType = activeFilters.types.has(d.type);
+    const matchesAttr = activeFilters.attrs.has(d.attr);
+    const matchesSearch = !query || d.name.toLowerCase().includes(query) || String(d.id).padStart(3, '0').includes(query);
+    const isVisible = matchesStage && matchesType && matchesAttr && matchesSearch;
+
+    const isSelected = selectedNodeId === d.id;
+    const isEvoTarget = activeEvoSet.has(d.id);
+    const isDevoTarget = activeDevoSet.has(d.id);
+    const isChecked = checkedSet.has(d.id);
+
+    let alpha = 1.0;
+    if (!isVisible) {
+      alpha = 0.12;
+    } else if (selectedNodeId) {
+      if (isSelected || isEvoTarget || isDevoTarget) alpha = 1.0;
+      else alpha = 0.22;
+    }
+
+    ctx.globalAlpha = alpha;
+    const rx = pos.x - nodeW / 2;
+    const ry = pos.y - nodeH / 2;
+
+    ctx.beginPath();
+    ctx.roundRect(rx, ry, nodeW, nodeH, radius);
+    ctx.fillStyle = STAGE_COLORS[d.stage] || "#1e3a8a";
+    ctx.fill();
+
+    if (isSelected) {
+      ctx.save();
+      ctx.shadowColor = "#00f2fe";
+      ctx.shadowBlur = 14;
+      ctx.lineWidth = 3.5;
+      ctx.strokeStyle = "#00f2fe";
+      ctx.stroke();
+      ctx.restore();
+    } else if (isEvoTarget) {
+      ctx.save();
+      ctx.shadowColor = "#00ff66";
+      ctx.shadowBlur = 12;
+      ctx.lineWidth = 3.5;
+      ctx.strokeStyle = "#00ff66";
+      ctx.stroke();
+      ctx.restore();
+    } else if (isDevoTarget) {
+      ctx.save();
+      ctx.shadowColor = "#ff0055";
+      ctx.shadowBlur = 12;
+      ctx.lineWidth = 3.5;
+      ctx.strokeStyle = "#ff0055";
+      ctx.stroke();
+      ctx.restore();
+    } else if (isChecked) {
+      ctx.lineWidth = 3.5;
+      ctx.strokeStyle = "#ffffff";
+      ctx.stroke();
+    } else {
+      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
+      ctx.stroke();
+    }
+
+    ctx.font = "bold 13px 'Courier New', monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(d.name.substring(0, 3).toUpperCase(), pos.x, pos.y);
+
+    if (isChecked) {
+      ctx.beginPath();
+      ctx.arc(rx + nodeW - 4, ry + 4, 4.5, 0, Math.PI * 2);
+      ctx.fillStyle = "#ffffff";
+      ctx.fill();
+    }
+  });
+
+  ctx.globalAlpha = 1.0;
+  ctx.restore();
+}
+
+/* NUMERICAL GRID */
+const numericalContainer = document.getElementById("numerical-container");
+const fieldguideGrid = document.getElementById("fieldguide-grid");
+
+function renderNumericalGrid() {
+  if (currentLayout !== "numerical") return;
+  const query = activeFilters.search.toLowerCase().trim();
+  fieldguideGrid.innerHTML = "";
+  let count = 0;
+
+  DIGIMON_DATA.forEach(d => {
+    if (!activeFilters.stages.has(d.stage)) return;
+    if (!activeFilters.types.has(d.type)) return;
+    if (!activeFilters.attrs.has(d.attr)) return;
+    if (query && !d.name.toLowerCase().includes(query) && !String(d.id).padStart(3, '0').includes(query)) return;
+
+    count++;
+    const isChecked = checkedSet.has(d.id);
+    const isSelected = selectedNodeId === d.id;
+    const typeInfo = TYPE_META[d.type] || { symbol: "Fr", color: "#94a3b8" };
+
+    const card = document.createElement("div");
+    card.id = `fg-card-${d.id}`;
+    card.className = `fieldguide-card relative rounded-lg p-2 flex flex-col justify-between cursor-pointer border-2 transition shadow-lg ${
+      isSelected
+        ? 'border-eden-cyan bg-eden-800 ring-2 ring-eden-cyan shadow-[0_0_20px_rgba(0,242,254,0.4)] scale-[1.02]'
+        : (isChecked ? 'border-sky-400/80 bg-eden-900/90' : 'border-eden-border bg-eden-900/40 hover:border-sky-500/50')
+    }`;
+
+    card.innerHTML = `
+      <div class="flex items-center justify-between gap-1 mb-1">
+        <span class="text-[10px] font-mono px-1.5 py-0.2 rounded text-white font-bold" style="background-color: ${STAGE_COLORS[d.stage] || '#3b82f6'}">
+          ${d.stage.substring(0, 1)}
+        </span>
+        <div class="flex items-center gap-1">
+          <span class="text-[9px] px-1 py-0.2 rounded font-mono font-bold" style="color: ${typeInfo.color}; background-color: rgba(2,6,23,0.7); border: 1px solid ${typeInfo.color}">
+            ${typeInfo.symbol}
+          </span>
+          <span class="text-[9px] px-1 py-0.2 rounded font-mono uppercase" style="color: ${ATTR_COLORS[d.attr]}; border: 1px solid ${ATTR_COLORS[d.attr]}">${d.attr.substring(0, 3)}</span>
+          <input type="checkbox" data-id="${d.id}" class="num-card-checkbox accent-emerald-500 w-4 h-4 rounded cursor-pointer z-10 ml-0.5" ${isChecked ? 'checked' : ''}>
+        </div>
+      </div>
+      <div class="h-12 flex items-center justify-center my-1 bg-eden-950/60 rounded border border-eden-border/40">
+        <span class="text-lg font-mono font-bold text-sky-400 tracking-wider">#${String(d.id).padStart(3, '0')}</span>
+      </div>
+      <div class="bg-sky-500/20 rounded px-1.5 py-0.5 flex items-center justify-between border border-sky-400/30">
+        <span class="font-tech font-bold text-[11px] text-white truncate max-w-[75px]">${d.name}</span>
+        <span class="font-tech font-bold text-[11px] text-white tracking-widest">${d.name.substring(0, 3).toUpperCase()}</span>
+      </div>
+    `;
+
+    card.onclick = (e) => {
+      if (e.target.closest('.num-card-checkbox')) {
+        e.stopPropagation();
+        if (checkedSet.has(d.id)) checkedSet.delete(d.id);
+        else checkedSet.add(d.id);
+        saveChecklist();
+        return;
+      }
+      triggerSelectDigimon(d.id, true);
+    };
+
+    fieldguideGrid.appendChild(card);
+  });
+
+  document.getElementById("visible-count-badge").textContent = `${count}/341 Visible`;
+  document.getElementById("num-registered-badge").textContent = `${checkedSet.size} / 341`;
+}
+
+/* SELECTION MODAL & TRACKING */
+const detailCard = document.getElementById("detail-card");
+const detailTrackCheckbox = document.getElementById("detail-track-checkbox");
+
+function triggerSelectDigimon(id, autoCenter = true) {
+  selectedNodeId = id;
+  const digi = DIGIMON_DATA.find(d => d.id === id);
+  if (!digi) return;
+
+  detailCard.classList.remove("hidden");
+  document.getElementById("detail-name").textContent = digi.name;
+  document.getElementById("detail-id").textContent = `#${String(digi.id).padStart(3, '0')}`;
+  document.getElementById("detail-stage-text").textContent = STAGE_LABELS[digi.stage] || digi.stage;
+  document.getElementById("detail-memory").textContent = `${digi.mem} MEM`;
+  document.getElementById("detail-slots").textContent = `${digi.slots} SLT`;
+
+  const attrEl = document.getElementById("detail-attr");
+  attrEl.textContent = digi.attr;
+  attrEl.style.color = ATTR_COLORS[digi.attr] || "#f59e0b";
+
+  const typeInfo = TYPE_META[digi.type] || { symbol: "Fr", color: "#38bdf8" };
+  const typeEl = document.getElementById("detail-type");
+  typeEl.textContent = `${typeInfo.symbol} ${digi.type}`;
+  typeEl.style.color = typeInfo.color;
+
+  document.getElementById("detail-desc").textContent = digi.desc;
+
+  const badge = document.getElementById("detail-stage-badge");
+  badge.style.backgroundColor = STAGE_COLORS[digi.stage] || '#3b82f6';
+  badge.textContent = digi.stage.substring(0, 1);
+
+  detailTrackCheckbox.checked = checkedSet.has(id);
+
+  const evoList = EVO_MAP.get(id) || [];
+  const devoList = DEVO_MAP.get(id) || [];
+  const reqBox = document.getElementById("detail-requirements");
+
+  if (evoList.length > 0) {
+    reqBox.innerHTML = evoList.map(e => {
+      const target = DIGIMON_DATA.find(d => d.id === e.to);
+      return `<div class="mb-1 text-slate-200"><span class="text-emerald-400 font-bold">${target ? target.name : 'Unknown'}:</span> ${e.req}</div>`;
+    }).join("");
+  } else if (digi.name.endsWith("NX")) {
+    reqBox.textContent = 'Promotional NX DLC form. Cannot digivolve or devolve.';
+  } else {
+    reqBox.textContent = 'Apex Form reached. No higher digivolution paths available.';
+  }
+
+  const evoContainer = document.getElementById("detail-evo-list");
+  evoContainer.innerHTML = "";
+  document.getElementById("detail-evo-count").textContent = `${evoList.length} forms`;
+
+  evoList.forEach(e => {
+    const target = DIGIMON_DATA.find(d => d.id === e.to);
+    if (!target) return;
+    const item = document.createElement("button");
+    item.className = "w-full text-left bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-500/40 hover:border-emerald-400 rounded p-1.5 flex items-center justify-between text-xs transition";
+    item.innerHTML = `
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        <span class="font-tech font-bold text-slate-100">${target.name}</span>
+      </div>
+      <span class="font-mono text-[10px] text-emerald-400">#${String(target.id).padStart(3, '0')}</span>
+    `;
+    item.onclick = () => triggerSelectDigimon(target.id, true);
+    evoContainer.appendChild(item);
+  });
+
+  const devoContainer = document.getElementById("detail-devo-list");
+  devoContainer.innerHTML = "";
+  document.getElementById("detail-devo-count").textContent = `${devoList.length} forms`;
+
+  devoList.forEach(dEntry => {
+    const parent = DIGIMON_DATA.find(d => d.id === dEntry.from);
+    if (!parent) return;
+    const item = document.createElement("button");
+    item.className = "w-full text-left bg-rose-950/40 hover:bg-rose-900/60 border border-rose-500/40 hover:border-rose-400 rounded p-1.5 flex items-center justify-between text-xs transition";
+    item.innerHTML = `
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+        <span class="font-tech font-bold text-slate-100">${parent.name}</span>
+      </div>
+      <span class="font-mono text-[10px] text-rose-400">#${String(parent.id).padStart(3, '0')}</span>
+    `;
+    item.onclick = () => triggerSelectDigimon(parent.id, true);
+    devoContainer.appendChild(item);
+  });
+
+  if (currentLayout === "numerical") renderNumericalGrid();
+  updateChecklistHighlight();
+
+  if (autoCenter) {
+    if (currentLayout === "numerical") {
+      setTimeout(() => {
+        const card = document.getElementById(`fg-card-${id}`);
+        if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 50);
+    } else {
+      const pos = targetPositions.get(id) || nodePositions.get(id);
+      if (pos) {
+        viewX = canvas.clientWidth / 2 - pos.x * viewScale;
+        viewY = canvas.clientHeight / 2 - pos.y * viewScale;
+        updateTooltipPosition();
+        requestCanvasFrame();
+      }
+    }
+  }
+}
+
+detailTrackCheckbox.onchange = (e) => {
+  if (!selectedNodeId) return;
+  if (e.target.checked) checkedSet.add(selectedNodeId);
+  else checkedSet.delete(selectedNodeId);
+  saveChecklist();
+};
+
+document.getElementById("btn-close-detail").onclick = () => {
+  detailCard.classList.add("hidden");
+  selectedNodeId = null;
+  updateChecklistHighlight();
+  if (currentLayout === "numerical") renderNumericalGrid();
+  requestCanvasFrame();
+};
+
+/* CHECKLIST DRAWER */
+const checklistDrawer = document.getElementById("checklist-drawer");
+const checklistItems = document.getElementById("checklist-items");
+
+function updateChecklistHighlight() {
+  const rows = checklistItems.querySelectorAll(".checklist-row");
+  rows.forEach(row => {
+    const rowId = parseInt(row.getAttribute("data-id"));
+    const isSelected = selectedNodeId === rowId;
+    const isChecked = checkedSet.has(rowId);
+
+    if (isSelected) {
+      row.classList.add("ring-2", "ring-eden-cyan", "border-eden-cyan", "bg-eden-800", "shadow-[0_0_12px_rgba(0,242,254,0.35)]");
+      row.classList.remove("text-slate-400", "border-eden-700/30", "bg-eden-900/30");
+      if (!checklistDrawer.classList.contains("translate-x-full")) {
+        row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    } else {
+      row.classList.remove("ring-2", "ring-eden-cyan", "bg-eden-800", "shadow-[0_0_12px_rgba(0,242,254,0.35)]");
+      if (isChecked) {
+        row.className = "checklist-row flex items-center justify-between p-1.5 rounded border text-xs font-mono transition cursor-pointer bg-cyan-950/60 border-eden-cyan/60 text-white";
+      } else {
+        row.className = "checklist-row flex items-center justify-between p-1.5 rounded border text-xs font-mono transition cursor-pointer bg-eden-900/30 border-eden-700/30 text-slate-400 hover:text-slate-200";
+      }
+    }
+  });
+}
+
+function updateChecklistUI() {
+  const total = 341;
+  const count = checkedSet.size;
+  const pct = Math.round((count / total) * 100);
+  document.getElementById("registered-count-text").textContent = `${count} TRACKED`;
+  document.getElementById("checklist-pill").textContent = `${pct}%`;
+  document.getElementById("drawer-progress-text").textContent = `${count} of ${total} Registered (${pct}%)`;
+
+  checklistItems.innerHTML = "";
+  DIGIMON_DATA.forEach(d => {
+    const isChecked = checkedSet.has(d.id);
+    const isSelected = selectedNodeId === d.id;
+    const row = document.createElement("div");
+    row.setAttribute("data-id", d.id);
+    row.className = `checklist-row flex items-center justify-between p-1.5 rounded border text-xs font-mono transition cursor-pointer ${
+      isSelected
+        ? 'ring-2 ring-eden-cyan border-eden-cyan bg-eden-800 text-white shadow-[0_0_12px_rgba(0,242,254,0.35)]'
+        : (isChecked ? 'bg-cyan-950/60 border-eden-cyan/60 text-white' : 'bg-eden-900/30 border-eden-700/30 text-slate-400 hover:text-slate-200')
+    }`;
+
+    row.innerHTML = `
+      <div class="flex items-center gap-2 flex-1 truncate select-none">
+        <input type="checkbox" data-id="${d.id}" class="accent-emerald-400 w-3.5 h-3.5 rounded cursor-pointer checklist-item-checkbox" ${isChecked ? 'checked' : ''}>
+        <span class="text-[10px] text-slate-500">#${String(d.id).padStart(3, '0')}</span>
+        <span class="truncate font-tech">${d.name}</span>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="text-[9px] font-mono px-1 py-0.2 rounded" style="color: ${TYPE_META[d.type]?.color || '#fff'}; background-color: rgba(15,23,42,0.8); border: 1px solid ${TYPE_META[d.type]?.color || '#fff'}">${TYPE_META[d.type]?.symbol || ''}</span>
+        ${isSelected ? '<span class="text-[9px] text-eden-cyan font-bold tracking-tight">ACTIVE</span>' : ''}
+        <span class="w-2 h-2 rounded-full" style="background-color: ${STAGE_COLORS[d.stage]}"></span>
+      </div>
+    `;
+
+    row.querySelector(".checklist-item-checkbox").onchange = (e) => {
+      e.stopPropagation();
+      if (e.target.checked) checkedSet.add(d.id);
+      else checkedSet.delete(d.id);
+      saveChecklist();
+      if (selectedNodeId === d.id) detailTrackCheckbox.checked = e.target.checked;
+    };
+
+    row.onclick = (e) => {
+      if (e.target.classList.contains("checklist-item-checkbox")) return;
+      triggerSelectDigimon(d.id, true);
+    };
+
+    checklistItems.appendChild(row);
+  });
+}
+
+document.getElementById("btn-toggle-checklist").onclick = () => {
+  checklistDrawer.classList.toggle("translate-x-full");
+  if (!checklistDrawer.classList.contains("translate-x-full") && selectedNodeId) {
+    updateChecklistHighlight();
+  }
+};
+document.getElementById("btn-close-checklist").onclick = () => {
+  checklistDrawer.classList.add("translate-x-full");
+};
+
+document.getElementById("btn-check-all").onclick = () => {
+  DIGIMON_DATA.forEach(d => checkedSet.add(d.id));
+  saveChecklist();
+  if (selectedNodeId) detailTrackCheckbox.checked = true;
+};
+document.getElementById("btn-uncheck-all").onclick = () => {
+  checkedSet.clear();
+  saveChecklist();
+  if (selectedNodeId) detailTrackCheckbox.checked = false;
+};
+
+/* TABS & NAVIGATION */
+const btnHier = document.getElementById("btn-hier");
+const btnForce = document.getElementById("btn-force");
+const btnLineage = document.getElementById("btn-lineage");
+const btnNum = document.getElementById("btn-num");
+
+function updateLayoutTabs(activeBtn) {
+  [btnHier, btnForce, btnLineage, btnNum].forEach(b => {
+    b.className = "px-2 py-1 rounded-md text-slate-400 hover:text-white transition";
+  });
+  activeBtn.className = "px-2 py-1 rounded-md text-eden-cyan bg-eden-800 border border-eden-cyan/40 shadow";
+}
+
+btnHier.onclick = () => {
+  currentLayout = "hierarchy";
+  updateLayoutTabs(btnHier);
+  numericalContainer.classList.add("hidden");
+  document.getElementById("canvas-container").classList.remove("hidden");
+  document.getElementById("canvas-controls").classList.remove("hidden");
+  recomputeLayouts();
+  if (selectedNodeId) triggerSelectDigimon(selectedNodeId, true);
+};
+
+btnForce.onclick = () => {
+  currentLayout = "force";
+  updateLayoutTabs(btnForce);
+  numericalContainer.classList.add("hidden");
+  document.getElementById("canvas-container").classList.remove("hidden");
+  document.getElementById("canvas-controls").classList.remove("hidden");
+  recomputeLayouts();
+  if (selectedNodeId) triggerSelectDigimon(selectedNodeId, true);
+};
+
+btnLineage.onclick = () => {
+  currentLayout = "lineage";
+  updateLayoutTabs(btnLineage);
+  numericalContainer.classList.add("hidden");
+  document.getElementById("canvas-container").classList.remove("hidden");
+  document.getElementById("canvas-controls").classList.remove("hidden");
+  recomputeLayouts();
+  if (selectedNodeId) triggerSelectDigimon(selectedNodeId, true);
+};
+
+btnNum.onclick = () => {
+  currentLayout = "numerical";
+  updateLayoutTabs(btnNum);
+  numericalContainer.classList.remove("hidden");
+  document.getElementById("canvas-container").classList.add("hidden");
+  document.getElementById("canvas-controls").classList.add("hidden");
+  renderNumericalGrid();
+  if (selectedNodeId) {
+    setTimeout(() => {
+      const card = document.getElementById(`fg-card-${selectedNodeId}`);
+      if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 60);
+  } else {
+    numericalContainer.scrollTop = 0;
+  }
+};
+
+/* FILTERS */
+const filterDrawer = document.getElementById("filter-drawer");
+document.getElementById("btn-toggle-filters").onclick = () => {
+  filterDrawer.classList.toggle("hidden");
+};
+document.getElementById("btn-close-filter").onclick = () => {
+  filterDrawer.classList.add("hidden");
+};
+
+// Stage Filter Checkboxes
+const stageFilterContainer = document.getElementById("stage-filter-container");
+Object.keys(STAGE_ORDER).forEach(stg => {
+  const lbl = document.createElement("label");
+  lbl.className = "flex items-center gap-1.5 px-1.5 py-1 rounded border border-eden-700/60 bg-eden-950/70 hover:border-eden-cyan/60 text-[10px] font-mono cursor-pointer transition";
+  lbl.innerHTML = `
+    <input type="checkbox" value="${stg}" checked class="accent-eden-cyan w-3 h-3 rounded stage-cb">
+    <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${STAGE_COLORS[stg]}"></span>
+    <span class="truncate text-slate-200">${stg}</span>
+  `;
+  lbl.querySelector("input").onchange = (e) => {
+    if (e.target.checked) activeFilters.stages.add(stg);
+    else activeFilters.stages.delete(stg);
+    requestCanvasFrame();
+    renderNumericalGrid();
+  };
+  stageFilterContainer.appendChild(lbl);
+});
+
+// Type Filter Checkboxes
+const typeFilterContainer = document.getElementById("type-filter-container");
+Object.keys(TYPE_META).forEach(tp => {
+  const info = TYPE_META[tp];
+  const lbl = document.createElement("label");
+  lbl.className = "flex items-center gap-1.5 px-2 py-1 rounded border border-eden-700/60 bg-eden-950/70 hover:border-eden-cyan/60 text-[10px] font-mono cursor-pointer transition";
+  lbl.title = info.desc;
+  lbl.innerHTML = `
+    <input type="checkbox" value="${tp}" checked class="accent-eden-cyan w-3 h-3 rounded type-cb">
+    <span class="font-bold text-xs" style="color: ${info.color}">${info.symbol}</span>
+    <span class="truncate text-slate-200 font-semibold">${tp}</span>
+  `;
+  lbl.querySelector("input").onchange = (e) => {
+    if (e.target.checked) activeFilters.types.add(tp);
+    else activeFilters.types.delete(tp);
+    requestCanvasFrame();
+    renderNumericalGrid();
+  };
+  typeFilterContainer.appendChild(lbl);
+});
+
+// Attribute Filter Checkboxes
+const attrFilterContainer = document.getElementById("attr-filter-container");
+Object.keys(ATTR_COLORS).forEach(attr => {
+  const lbl = document.createElement("label");
+  lbl.className = "flex items-center gap-1.5 px-1.5 py-1 rounded border border-eden-700/60 bg-eden-950/70 hover:border-eden-cyan/60 text-[10px] font-mono cursor-pointer transition";
+  lbl.innerHTML = `
+    <input type="checkbox" value="${attr}" checked class="accent-eden-cyan w-3 h-3 rounded attr-cb">
+    <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: ${ATTR_COLORS[attr]}"></span>
+    <span class="truncate text-slate-200">${attr}</span>
+  `;
+  lbl.querySelector("input").onchange = (e) => {
+    if (e.target.checked) activeFilters.attrs.add(attr);
+    else activeFilters.attrs.delete(attr);
+    requestCanvasFrame();
+    renderNumericalGrid();
+  };
+  attrFilterContainer.appendChild(lbl);
+});
+
+document.getElementById("btn-stage-toggle-all").onclick = () => {
+  const allStages = Object.keys(STAGE_ORDER);
+  const isAllChecked = allStages.every(stg => activeFilters.stages.has(stg));
+  allStages.forEach(stg => {
+    if (isAllChecked) activeFilters.stages.delete(stg);
+    else activeFilters.stages.add(stg);
+  });
+  document.querySelectorAll(".stage-cb").forEach(cb => cb.checked = !isAllChecked);
+  requestCanvasFrame();
+  renderNumericalGrid();
+};
+
+document.getElementById("btn-type-toggle-all").onclick = () => {
+  const allTypes = Object.keys(TYPE_META);
+  const isAllChecked = allTypes.every(tp => activeFilters.types.has(tp));
+  allTypes.forEach(tp => {
+    if (isAllChecked) activeFilters.types.delete(tp);
+    else activeFilters.types.add(tp);
+  });
+  document.querySelectorAll(".type-cb").forEach(cb => cb.checked = !isAllChecked);
+  requestCanvasFrame();
+  renderNumericalGrid();
+};
+
+document.getElementById("btn-attr-toggle-all").onclick = () => {
+  const allAttrs = Object.keys(ATTR_COLORS);
+  const isAllChecked = allAttrs.every(attr => activeFilters.attrs.has(attr));
+  allAttrs.forEach(attr => {
+    if (isAllChecked) activeFilters.attrs.delete(attr);
+    else activeFilters.attrs.add(attr);
+  });
+  document.querySelectorAll(".attr-cb").forEach(cb => cb.checked = !isAllChecked);
+  requestCanvasFrame();
+  renderNumericalGrid();
+};
+
+document.getElementById("btn-reset-filters").onclick = () => {
+  Object.keys(STAGE_ORDER).forEach(stg => activeFilters.stages.add(stg));
+  Object.keys(TYPE_META).forEach(tp => activeFilters.types.add(tp));
+  Object.keys(ATTR_COLORS).forEach(attr => activeFilters.attrs.add(attr));
+  document.querySelectorAll(".stage-cb").forEach(cb => cb.checked = true);
+  document.querySelectorAll(".type-cb").forEach(cb => cb.checked = true);
+  document.querySelectorAll(".attr-cb").forEach(cb => cb.checked = true);
+  document.getElementById("search-input").value = "";
+  activeFilters.search = "";
+  requestCanvasFrame();
+  renderNumericalGrid();
+};
+
+document.getElementById("search-input").oninput = (e) => {
+  activeFilters.search = e.target.value;
+  requestCanvasFrame();
+  renderNumericalGrid();
+};
+
+/* TOOLTIP UPDATES */
+let hoveredNodeId = null;
+const tooltipEl = document.getElementById("node-quick-tooltip");
+
+function updateTooltipPosition() {
+  if (!hoveredNodeId || currentLayout === "numerical") {
+    tooltipEl.classList.add("hidden");
+    return;
+  }
+  const pos = nodePositions.get(hoveredNodeId);
+  if (!pos) {
+    tooltipEl.classList.add("hidden");
+    return;
+  }
+  const screenX = pos.x * viewScale + viewX;
+  const screenY = (pos.y - 18) * viewScale + viewY;
+  tooltipEl.style.left = `${screenX}px`;
+  tooltipEl.style.top = `${screenY}px`;
+}
+
+function showTooltipForNode(d) {
+  hoveredNodeId = d.id;
+  tooltipEl.classList.remove("hidden");
+  document.getElementById("tooltip-id").textContent = `#${String(d.id).padStart(3, '0')}`;
+  document.getElementById("tooltip-name").textContent = d.name;
+  document.getElementById("tooltip-stage").textContent = STAGE_LABELS[d.stage] || d.stage;
+  document.getElementById("tooltip-stage-dot").style.backgroundColor = STAGE_COLORS[d.stage] || "#3b82f6";
+
+  const typeInfo = TYPE_META[d.type] || { symbol: "Fr", color: "#38bdf8" };
+  const tipType = document.getElementById("tooltip-type-badge");
+  tipType.textContent = `${typeInfo.symbol} ${d.type}`;
+  tipType.style.color = typeInfo.color;
+  tipType.style.border = `1px solid ${typeInfo.color}`;
+
+  const tipAttr = document.getElementById("tooltip-attr-badge");
+  tipAttr.textContent = d.attr;
+  tipAttr.style.color = ATTR_COLORS[d.attr] || "#f59e0b";
+  tipAttr.style.border = `1px solid ${ATTR_COLORS[d.attr] || "#f59e0b"}`;
+
+  updateTooltipPosition();
+}
+
+function hideTooltip() {
+  hoveredNodeId = null;
+  tooltipEl.classList.add("hidden");
+}
+
+/* TOUCH & MOUSE PAN/ZOOM/HOLD INTERACTION ENGINE */
+let isDragging = false;
+let dragStartX = 0;
+let dragStartY = 0;
+let holdTimer = null;
+let holdProgressInterval = null;
+let holdTargetNode = null;
+let initialPinchDistance = null;
+
+const holdProgressEl = document.getElementById("hold-progress");
+const holdCircle = document.getElementById("hold-circle");
+
+function getNodeAt(screenX, screenY) {
+  const worldX = (screenX - viewX) / viewScale;
+  const worldY = (screenY - viewY) / viewScale;
+  const halfW = 27;
+  const halfH = 16;
+  for (let i = DIGIMON_DATA.length - 1; i >= 0; i--) {
+    const d = DIGIMON_DATA[i];
+    const pos = nodePositions.get(d.id);
+    if (!pos) continue;
+    if (worldX >= pos.x - halfW && worldX <= pos.x + halfW &&
+        worldY >= pos.y - halfH && worldY <= pos.y + halfH) {
+      return d;
+    }
+  }
+  return null;
+}
+
+function cancelHold() {
+  if (holdTimer) clearTimeout(holdTimer);
+  if (holdProgressInterval) clearInterval(holdProgressInterval);
+  holdTimer = null;
+  holdProgressInterval = null;
+  holdTargetNode = null;
+  holdProgressEl.classList.add("hidden");
+  holdCircle.style.strokeDashoffset = "150";
+}
+
+function startHold(node, clientX, clientY) {
+  cancelHold();
+  holdTargetNode = node;
+  const rect = canvas.getBoundingClientRect();
+  holdProgressEl.style.left = `${clientX - rect.left}px`;
+  holdProgressEl.style.top = `${clientY - rect.top}px`;
+  holdProgressEl.classList.remove("hidden");
+
+  let elapsed = 0;
+  const duration = 300;
+  holdProgressInterval = setInterval(() => {
+    elapsed += 20;
+    const offset = 150 - (elapsed / duration) * 150;
+    holdCircle.style.strokeDashoffset = Math.max(0, offset);
+  }, 20);
+
+  holdTimer = setTimeout(() => {
+    cancelHold();
+    if (node) {
+      if (selectedNodeId === node.id) {
+        selectedNodeId = null;
+        detailCard.classList.add("hidden");
+        updateChecklistHighlight();
+        if (currentLayout === "numerical") renderNumericalGrid();
+        requestCanvasFrame();
+      } else {
+        triggerSelectDigimon(node.id, true);
+      }
+    }
+  }, duration);
+}
+
+canvas.addEventListener("mousedown", (e) => {
+  if (currentLayout === "numerical") return;
+  isDragging = true;
+  dragStartX = e.clientX - viewX;
+  dragStartY = e.clientY - viewY;
+  const rect = canvas.getBoundingClientRect();
+  const node = getNodeAt(e.clientX - rect.left, e.clientY - rect.top);
+  if (node) startHold(node, e.clientX, e.clientY);
+});
+
+window.addEventListener("mousemove", (e) => {
+  if (isDragging) {
+    const moveDist = Math.hypot(e.clientX - (dragStartX + viewX), e.clientY - (dragStartY + viewY));
+    if (moveDist > 4) {
+      cancelHold();
+      viewX = e.clientX - dragStartX;
+      viewY = e.clientY - dragStartY;
+      updateTooltipPosition();
+      requestCanvasFrame();
+    }
+  } else if (currentLayout !== "numerical") {
+    const rect = canvas.getBoundingClientRect();
+    const node = getNodeAt(e.clientX - rect.left, e.clientY - rect.top);
+    if (node) {
+      canvas.style.cursor = "pointer";
+      showTooltipForNode(node);
+    } else {
+      canvas.style.cursor = "grab";
+      hideTooltip();
+    }
+  }
+});
+
+window.addEventListener("mouseup", () => {
+  isDragging = false;
+  cancelHold();
+});
+
+canvas.addEventListener("wheel", (e) => {
+  if (currentLayout === "numerical") return;
+  e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const mouseX = e.clientX - rect.left;
+  const mouseY = e.clientY - rect.top;
+  const zoomFactor = e.deltaY < 0 ? 1.15 : 0.87;
+  const newScale = Math.max(0.18, Math.min(3.5, viewScale * zoomFactor));
+
+  viewX = mouseX - (mouseX - viewX) * (newScale / viewScale);
+  viewY = mouseY - (mouseY - viewY) * (newScale / viewScale);
+  viewScale = newScale;
+
+  updateTooltipPosition();
+  requestCanvasFrame();
+}, { passive: false });
+
+/* TOUCH EVENTS FOR MOBILE PIPELINES */
+canvas.addEventListener("touchstart", (e) => {
+  if (currentLayout === "numerical") return;
+  if (e.touches.length === 1) {
+    isDragging = true;
+    dragStartX = e.touches[0].clientX - viewX;
+    dragStartY = e.touches[0].clientY - viewY;
+    const rect = canvas.getBoundingClientRect();
+    const node = getNodeAt(e.touches[0].clientX - rect.left, e.touches[0].clientY - rect.top);
+    if (node) {
+      showTooltipForNode(node);
+      startHold(node, e.touches[0].clientX, e.touches[0].clientY);
+    }
+  } else if (e.touches.length === 2) {
+    cancelHold();
+    hideTooltip();
+    isDragging = false;
+    initialPinchDistance = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    );
+  }
+}, { passive: false });
+
+canvas.addEventListener("touchmove", (e) => {
+  if (currentLayout === "numerical") return;
+  if (e.touches.length === 1 && isDragging) {
+    const moveDist = Math.hypot(e.touches[0].clientX - (dragStartX + viewX), e.touches[0].clientY - (dragStartY + viewY));
+    if (moveDist > 4) {
+      cancelHold();
+      hideTooltip();
+      viewX = e.touches[0].clientX - dragStartX;
+      viewY = e.touches[0].clientY - dragStartY;
+      requestCanvasFrame();
+    }
+  } else if (e.touches.length === 2 && initialPinchDistance) {
+    e.preventDefault();
+    const currentDist = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    );
+    const factor = currentDist / initialPinchDistance;
+    initialPinchDistance = currentDist;
+    viewScale = Math.max(0.18, Math.min(3.5, viewScale * factor));
+    updateTooltipPosition();
+    requestCanvasFrame();
+  }
+}, { passive: false });
+
+canvas.addEventListener("touchend", () => {
+  isDragging = false;
+  initialPinchDistance = null;
+  cancelHold();
+});
+
+/* ZOOM BUTTON CONTROLS */
+document.getElementById("btn-zoom-in").onclick = () => {
+  viewScale = Math.min(3.5, viewScale * 1.25);
+  updateTooltipPosition();
+  requestCanvasFrame();
+};
+document.getElementById("btn-zoom-out").onclick = () => {
+  viewScale = Math.max(0.18, viewScale * 0.8);
+  updateTooltipPosition();
+  requestCanvasFrame();
+};
+document.getElementById("btn-reset-zoom").onclick = () => {
+  centerViewOnSort();
+  requestCanvasFrame();
+};
+
+/* INITIALIZATION */
+window.onload = () => {
+  resizeCanvas();
+  computeHierarchyLayout();
+  targetPositions.forEach((pos, id) => {
+    nodePositions.set(id, { x: pos.x, y: pos.y, vx: 0, vy: 0 });
+  });
+  updateChecklistUI();
+  requestCanvasFrame();
+};
+</script>
+</body>
+</html>
